@@ -22,3 +22,6 @@ https://stackoverflow.com/questions/41322541/rebuild-docker-container-on-file-ch
 
 Dev environment
 https://vsupalov.com/rebuilding-docker-image-development/
+
+
+## Running the project

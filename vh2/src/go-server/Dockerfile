@@ -1,13 +1,63 @@
-# Use the smallest footprint base image
-FROM node:12-alpine
-# We do not want to run the app as root for security concerns.
-# Alpine image gives us a user node, so let us use that
-RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+# Multi-stage minimal fileprint GO image
 
-# Change workdir
-WORKDIR /home/node/app
+# Get alpine image and store it inside a variable 'builder'
+FROM golang:alpine AS builder
+# Install git.
+# Git is required for fetching the dependencies.
+RUN apk update && apk add --no-cache git
+# RUN apk add --no-cache bash
+# Create appuser.
+ENV USER=appuser
+ENV UID=1337
 
-# chown moved packages, remember ./ is now at workdir root
-COPY --chown=node:node ./src/* ./
+# --disabled-password prevents prompt for a password
+# --gecos "" circumvents the prompt for "Full Name" etc. on Debian-based systems
+# --home "$(pwd)" sets the user's home to the WORKDIR.
+# --no-create-home prevents cruft getting copied into the directory from /etc/skel
+RUN adduser \    
+    --disabled-password \
+    --gecos "" \    
+    --home "/nonexistent" \    
+    --shell "/sbin/nologin" \    
+    --no-create-home \    
+    --uid "${UID}" \    
+    "${USER}"
 
-CMD [ "node", "index.js"]
+# This only affects the containers path
+WORKDIR $GOPATH/src/mypackage/myapp/
+# https://docs.docker.com/engine/reference/builder/#copy
+# We are copying everything from current file to the WORKDIR path of the container
+COPY . .
+# Fetch dependencies.
+# Using go get.
+RUN go get -d -v
+# Using go mod.
+# RUN go mod download
+# RUN go mod verify
+# Build the binary.
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/hello
+############################
+# STEP 2 build a small image
+############################
+# if you want an even smaller iamge (5MB instead of 10MB) change this to scratch
+# however if you do this you cannot run interactive shell
+FROM  alpine:latest
+# Import the user and group files from the builder.
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+# COPY --from=builder /bin/bash /bin/bash
+# Copy our static executable.
+COPY --from=builder /go/bin/hello /go/bin/hello
+# Use an unprivileged user.
+USER appuser:appuser
+COPY --chown=appuser:appuser . .
+# Run the hello binary.
+# https://docs.docker.com/engine/reference/builder/#entrypoint
+# ENTRYPOINT ["/go/bin/hello"]
+
+# Run on start
+# I have no idea why this starts the server...
+CMD ["/go/bin/hello"]
+# Not sure if built correctly
+# Debug checking content
+# https://stackoverflow.com/questions/29535015/error-cannot-start-container-stat-bin-sh-no-such-file-or-directory

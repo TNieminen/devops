@@ -1,0 +1,25 @@
+version: '3.2'
+services:
+  go:
+    build: ./src/go-server
+    image: go-server
+    ports:
+      - 8080:8080
+    networks:
+      - ping-network
+  node:
+    build: ./src/node-server
+    image: node-server
+    ports:
+      - 8081:8081
+    # depends_on:
+      # - postgres
+    networks:
+      - ping-network
+    # environment:
+    # volumes:
+networks:
+  ping-network:
+
+# volumes:
+

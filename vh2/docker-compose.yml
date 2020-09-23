@@ -3,6 +3,7 @@ services:
   go:
     build: ./src/go-server
     image: go-server
+    #using ports will expose the service to host machine
     ports:
       - 8080:8080
     networks:
@@ -10,8 +11,9 @@ services:
   node:
     build: ./src/node-server
     image: node-server
-    ports:
-      - 8081:8081
+    # using expose only exposes the container in docker network
+    expose: 
+      - "8081"
     # depends_on:
       # - postgres
     networks:

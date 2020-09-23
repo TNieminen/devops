@@ -13,9 +13,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', (req,res)=>{
+  const { remoteAddress, remotePort, localAddress, localPort } = req.client.remotePort
   console.log("Req came from " + req.client.remoteAddress + ":" + req.client.remotePort);
   console.log("Req served at " + req.client.localAddress + ":" + req.client.localPort);
-  res.sendStatus(200)
+  res.sendStatus(404)//.send({remoteAddress, remotePort, localAddress, localPort }).status(404)
 });
 // app.use('/users', usersRouter);
 

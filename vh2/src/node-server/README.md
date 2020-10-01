@@ -31,6 +31,7 @@ See section **Docker** for recommended usage
 ## Running the project
 
 ```
+yarn install
 yarn start
 ```
 

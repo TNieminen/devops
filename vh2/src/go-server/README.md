@@ -1,22 +1,35 @@
-# Guide
-https://medium.com/@chemidy/create-the-smallest-and-secured-golang-docker-image-based-on-scratch-4752223b7324
+# General
 
-### Running the project
+This Go server serves one route at root / and responds with a JSON body
+containing a structure of
+
+```json
+"remoteAddress":"ip:port"
+"localAddress":"ip:port"
+```
+here remoteAddress is the callee's address and port and localAddress is the servers address and port.
+Note that inside the container because of network mapping inside docker-compose the ip address
+of go will be just "go"
+
+When running with docker compose, this service is only accessible via local network, such as calling from
+the related node server
+
+## Running the project
+
 go run server.go
 
+# Docker
 
-## [Docker multi stage builds](https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds)
+## Build
 
-
-With multi-stage builds, you use multiple FROM statements in your Dockerfile. Each FROM instruction can use a different base, and each of them begins a new stage of the build. You can selectively copy artifacts from one stage to another, leaving behind everything you don’t want in the final image. To show how this works, let’s adapt the Dockerfile from the previous section to use multi-stage builds.
-
-### Build
 docker build --tag go-test-1 .
 
-### Access build image
+## Access build image
 
 docker run --rm -it go-test-1 /bin/ash
 
+
+## Notes on the image
 
 ### As command
 
@@ -36,7 +49,8 @@ The COPY --from=0 line copies just the built artifact from the previous stage in
 
 Simply speaking “docker run” has its target as docker images and “docker exec” is targeting pre-existing docker containers. Using the resources inside images or container are of different sense. When using “docker run” a temporary docker container is created  and stopped(not terminated) after the command has finished running. “Docker exec” needs a running container to take the command.
 
-## Entrypoint vs CMD
+### Entrypoint vs CMD
+
 https://goinbigdata.com/docker-run-vs-cmd-vs-entrypoint/#:~:text=ENTRYPOINT%20instruction%20allows%20you%20to,runs%20with%20command%20line%20parameters.
 
 ### Entrypoint

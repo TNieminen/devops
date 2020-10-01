@@ -9,12 +9,12 @@ WORKDIR /home/node/app
 
 # Separate dependency installation from executable code for build performance
 COPY --chown=node:node package.json yarn.lock /home/node/app/
-# Don't generate a lockfile on install
+# Don't generate a lockfile on install, this makes certain that we have static
+# dependency resolving
 RUN yarn install --frozen-lockfile
 
 # chown moved packages, remember ./ is now at workdir root
 COPY --chown=node:node ./src/bin/www /home/node/app/bin/
 COPY --chown=node:node ./src/index.js /home/node/app/
 
-# https://medium.com/better-programming/docker-in-development-with-nodemon-d500366e74df
 CMD [ "node", "./src/bin/www"]

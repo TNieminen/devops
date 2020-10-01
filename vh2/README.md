@@ -1,81 +1,71 @@
-# Context
+# General
 
-For managing and orchestrating cloud system, Docker Compose is a key technology.
+This project implements a simple Docker backed ip ping service, the service
+consists of two parts.
 
-For more info see https://docs.docker.com/compose/
+A node server, which is public to the network served at localhost:8001
+this service has one route at root "/" and when calling for instance
+with
 
-The purpose of this exercise is to learn basics of Docker Compose through hands on.
-
-The points from this exercise depend on timing and content:
-
-maximum 4 points are given (total of the course will be about 50)
-missing the deadline: points reduced by 0.5 points / day
-how well the requirements are met: 2p
-following the good programming and docker practicese: 2p
-
-More info in the "assignment.pdf"
-
-## Notes
-
-General notes
-https://stackoverflow.com/questions/41322541/rebuild-docker-container-on-file-changes
-
-Dev environment
-https://vsupalov.com/rebuilding-docker-image-development/
-
-
-## Running the project
-docker-compose -f ./docker-compose.yml up --build -d
-
-
-## Networking in docker compose
-
-```yml
-version: '3.2'
-services:
-  # Because node and go are in the same network, go can reach 
-  # node at http://node:por-number and the other way around
-  go:
-    build: ./src/go-server
-    image: go-server
-    links:
-      - "node:node-pinger" # You can now reach node also at node-pinger inside go
-    ports:
-      - 8080:8080
-    networks:
-      - ping-network
-  node:
-    build: ./src/node-server
-    image: node-server
-    ports:
-      - 8081:8081
-    # depends_on:
-      # - postgres
-    networks:
-      - ping-network
-    # environment:
-    # volumes:
-networks:
-  ping-network:
-
-# volumes:
+```sh
+curl localhost:8001
 ```
 
-### Network Drivers
+The expected response format (without the comments) is:
 
-[**bridge**](https://docs.docker.com/network/bridge/)
- - Default network driver
- - Usually needed when applications run in standalone containers that need to communicate (in the same network)
- - Provides isolation from containers which are not connected to that bridge network
+NOTE:
+below ::ffff: is a subnet prefix for IPv4 (32 bit) addresses that are placed inside an IPv6 (128 bit) space. IPv6 is broken into two parts, the subnet prefix, and the interface suffix. Each one is 64 bits long, or, 4 groups of 4 hexadecimal characters.
 
-**host**
- - For standalone containers, remove network isolation between the container and the Docker host, and use the host’s networking directly
+```
+// This is the node servers network, where network address is dependent on your host network setup and content is served via port 8001
 
-**overlay**
+> Hello from ::ffff:172.23.0.3:8001 
 
-**macvlan**
+// This is the origin of your request, when you connect to the server at port 8001 an ephemeral request port is selected
+// at maximum  2^16–1 (65535) which in this case 44560. This is the address the server sends it's response to
 
-**none**
+> To ::ffff:172.23.0.1:44560 
+
+// Because of Dockers internal network mapping the go-server sees itself simply as go
+
+> Hello from go:8080 
+
+// go server is responding to our node server, which is attached to the local network, hence it has a host network address. The port mapping
+// is a random ephemeral port is assigned.
+
+> To 172.23.0.3:49084   
+```
+
+## Running the project
+
+```
+docker-compose up --build -d
+```
+*remove -d if you want to see logs from the instances*
+
+when you want to take the service run in root
+
+```
+docker-compose down
+```
+
+## Usage
+
+As mentioned above, you can access the service with
+
+```sh
+curl localhost:8001
+```
+
+or you can access the service directly from your browser at
+`localhost:8001`
 
 
-**network plugins**
+## Project structure
+
+All related files are served under `./src`
+There are two services included
+`./src/node-server`
+and
+`./src/go-server`
+for further information see their respective README.md files

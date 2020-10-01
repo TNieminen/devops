@@ -1,11 +1,13 @@
 version: '3.2'
 services:
+  # Because node and go are in the same network, node can reach 
+  # go at http://go:port-number and the other way around
   go:
     build: ./src/go-server
     image: go-server
     #using ports will expose the service to host machine
-    ports:
-      - 8080:8080
+    expose: 
+      - "8080"
     networks:
       - ping-network
   node:
@@ -13,12 +15,10 @@ services:
     command: yarn nodemon ./src/bin/www
     image: node-server
     # using expose only exposes the container in docker network
-    # expose: 
-      # - "8081"
     ports:  
-      - 8081:8081
-    # depends_on:
-      # - postgres
+      - 8001:8001
+    depends_on:
+      - go
     networks:
       - ping-network
     # environment:

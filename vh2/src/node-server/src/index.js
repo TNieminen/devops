@@ -1,10 +1,11 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const fetch = require('node-fetch')
 
-var app = express();
+const app = express();
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -12,14 +13,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', (req,res)=>{
+app.use('/', async(req,res)=>{
   const { remoteAddress, remotePort, localAddress, localPort } = req.client
-  console.log("Req came from " + req.client.remoteAddress + ":" + req.client.remotePort);
-  console.log("Req served at " + req.client.localAddress + ":" + req.client.localPort);
-  res.send({ remoteAddress, remotePort, localAddress, localPort }).status(200)
-  // res.sendStatus(200)
+  const response = await fetch('http://go:8080').then(res=>res.json())
+  const service2Response = `Hello from ${response.localAddress} \nTo ${response.remoteAddress} \n`
+  const service1Response = `Hello from ${localAddress}:${localPort} \nTo ${remoteAddress}:${remotePort} \n`
+  res.send(service1Response + service2Response).status(200)
 });
-// app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

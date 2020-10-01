@@ -36,16 +36,17 @@ RUN go get -d -v
 # RUN go mod verify
 # Build the binary.
 RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/hello
+
 ############################
 # STEP 2 build a small image
 ############################
-# if you want an even smaller iamge (5MB instead of 10MB) change this to scratch
+
+# if you want an even smaller iamge (5MB instead of 10MB) change this to FROM scratch
 # however if you do this you cannot run interactive shell
 FROM  alpine:latest
 # Import the user and group files from the builder.
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
-# COPY --from=builder /bin/bash /bin/bash
 # Copy our static executable.
 COPY --from=builder /go/bin/hello /go/bin/hello
 # Use an unprivileged user.
@@ -56,8 +57,4 @@ COPY --chown=appuser:appuser . .
 # ENTRYPOINT ["/go/bin/hello"]
 
 # Run on start
-# I have no idea why this starts the server...
 CMD ["/go/bin/hello"]
-# Not sure if built correctly
-# Debug checking content
-# https://stackoverflow.com/questions/29535015/error-cannot-start-container-stat-bin-sh-no-such-file-or-directory

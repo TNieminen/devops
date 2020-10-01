@@ -10,6 +10,7 @@ services:
       - ping-network
   node:
     build: ./src/node-server
+    command: yarn nodemon ./src/bin/www
     image: node-server
     # using expose only exposes the container in docker network
     # expose: 
@@ -21,7 +22,8 @@ services:
     networks:
       - ping-network
     # environment:
-    # volumes:
+    volumes: 
+      - ./src/node-server/src:/home/node/app/src/
 networks:
   ping-network:
 

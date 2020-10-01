@@ -7,7 +7,14 @@ RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
 # Change workdir
 WORKDIR /home/node/app
 
-# chown moved packages, remember ./ is now at workdir root
-COPY --chown=node:node . /home/node/app
+# Separate dependency installation from executable code for build performance
+COPY --chown=node:node package.json yarn.lock /home/node/app/
+# Don't generate a lockfile on install
+RUN yarn install --frozen-lockfile
 
-CMD [ "node", "./bin/www"]
+# chown moved packages, remember ./ is now at workdir root
+COPY --chown=node:node ./src/bin/www /home/node/app/bin/
+COPY --chown=node:node ./src/index.js /home/node/app/
+
+# https://medium.com/better-programming/docker-in-development-with-nodemon-d500366e74df
+CMD [ "node", "./src/bin/www"]

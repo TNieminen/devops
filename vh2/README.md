@@ -1,15 +1,42 @@
 # General
 
-This project implements a simple Docker backed ip ping service, the service
+This project implements a simple Docker backed ip ping service which returns
+the requesters and services' ip and port mappings. The service
 consists of two parts.
 
 A node server, which is public to the network served at localhost:8001
-this service has one route at root "/" and when calling for instance
-with
+this service has one route at root "/"
+
+A go server, which is not public and only accessible through the Docker network.
+In this repository it is accessed by the public node-server
+
+For further information see part **Usage**
+
+
+## Running the project
+
+```
+docker-compose up --build -d
+```
+*remove -d if you want to see logs from the instances*
+
+when you want to take the service run in root
+
+```
+docker-compose down
+```
+
+## Usage
+
+After running the project, you can access the service with
 
 ```sh
 curl localhost:8001
 ```
+
+or you can access the service directly from your browser at
+`localhost:8001`
+
 
 The expected response format (without the comments) is:
 
@@ -35,30 +62,6 @@ below ::ffff: is a subnet prefix for IPv4 (32 bit) addresses that are placed ins
 
 > To 172.23.0.3:49084   
 ```
-
-## Running the project
-
-```
-docker-compose up --build -d
-```
-*remove -d if you want to see logs from the instances*
-
-when you want to take the service run in root
-
-```
-docker-compose down
-```
-
-## Usage
-
-As mentioned above, you can access the service with
-
-```sh
-curl localhost:8001
-```
-
-or you can access the service directly from your browser at
-`localhost:8001`
 
 
 ## Project structure

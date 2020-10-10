@@ -1,0 +1,91 @@
+---
+root: true
+extends:
+  - prettier
+plugins:
+  - jsdoc
+  - prettier
+parserOptions:
+  parser: babel-eslint
+  sourceType: module
+  ecmaVersion: 8
+  ecmaFeatures:
+    experimentalObjectRestSpread: true
+    impliedStrict: true
+    classes: true
+    jsx: false
+env:
+  browser: true
+  node: true
+  serviceworker: true
+  es6: true
+rules:
+  no-mixed-spaces-and-tabs: error
+  space-before-blocks: error
+  block-spacing: error
+  consistent-return: 'off'
+  linebreak-style: warn
+  space-infix-ops: error
+  space-unary-ops: error
+  spaced-comment: error
+  template-curly-spacing: 'off'
+  indent:
+  - warn
+  - 2
+  - ignoredNodes:
+    - TemplateLiteral
+    SwitchCase: 1
+  keyword-spacing:
+    - error
+    - after: true
+  space-before-function-paren:
+    - error
+    - never
+  func-call-spacing:
+    - error
+    - never
+  func-names: warn
+  arrow-spacing: error
+  arrow-parens:
+    - error
+    - as-needed
+    - requireForBlockBody: true
+  no-await-in-loop: warn
+  guard-for-in: warn
+  no-restricted-syntax: 'off'
+  prefer-rest-params: warn
+  prefer-destructuring: warn
+  no-bitwise: warn
+  no-multi-str: warn
+  semi:
+    - error
+    - never
+  no-useless-escape: warn
+  quotes:
+    - error
+    - single
+  object-curly-spacing: error
+  object-curly-newline:
+    - error
+    - ObjectPattern: never
+      ImportDeclaration: never
+  camelcase: error
+  no-unused-vars: warn
+  no-global-assign: warn
+  no-param-reassign: 'off'
+  no-underscore-dangle: warn
+  no-shadow: warn
+  no-restricted-globals: 'off'
+  no-multi-assign: warn
+  no-plusplus: 0
+  import/prefer-default-export: 'off'
+  import/no-dynamic-require: 'off'
+  global-require: 'off'
+  vue/html-self-closing: 'off'
+  no-console: 'off'
+  no-alert: warn
+  class-methods-use-this: warn
+  nuxt/no-cjs-in-config: 'off'
+  newline-per-chained-call:
+    - 2
+    - ignoreChainWithDepth: 2

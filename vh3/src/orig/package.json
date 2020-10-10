@@ -1,0 +1,14 @@
+{
+  "name": "orig-server",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon ./src/bin/www"
+  },
+  "dependencies": {
+    "amqplib": "^0.6.0",
+    "dotenv": "^8.2.0",
+    "nodemon": "^2.0.4",
+    "pino": "^6.7.0"
+  }
+}

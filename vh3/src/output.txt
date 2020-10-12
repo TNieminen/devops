@@ -1,0 +1,10 @@
+2020-10-12T11:55:52.464Z Topic my.o: MSG_1
+2020-10-12T11:55:53.475Z Topic my.i: Got message MSG_1
+2020-10-12T11:55:55.463Z Topic my.o: MSG_2
+2020-10-12T11:55:56.469Z Topic my.i: Got message MSG_2
+2020-10-12T11:55:58.461Z Topic my.o: MSG_3
+2020-10-12T11:55:59.466Z Topic my.i: Got message MSG_3
+2020-10-12T11:56:01.464Z Topic my.o: MSG_1
+2020-10-12T11:56:02.469Z Topic my.i: Got message MSG_1
+2020-10-12T11:56:04.460Z Topic my.o: MSG_2
+2020-10-12T11:56:05.471Z Topic my.i: Got message MSG_2

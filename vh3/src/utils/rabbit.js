@@ -53,7 +53,7 @@ const publishMessage = ({channel = {}, exchange = 'default-exchange', message = 
   const options = {
     persistent:true // The message will survive broker restarts provided it’s in a queue that also survives restarts.
   }
-  channel.publish(exchange,'',Buffer.from(message),options)
+  channel.publish(exchange,,Buffer.from(message),options)
 }
 
 

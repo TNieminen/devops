@@ -1,31 +1,63 @@
 version: '3.2'
 services:
-  # Because node and go are in the same network, node can reach 
-  # go at http://go:port-number and the other way around
-  go:
-    build: ./src/go-server
-    image: go-server
+  # https://stackoverflow.com/questions/31746182/docker-compose-wait-for-container-x-before-starting-y
+  # https://stackoverflow.com/questions/47710767/what-is-the-alternative-to-condition-form-of-depends-on-in-docker-compose-versio
+  rabbit:
+    image: rabbitmq:3-management
     #using ports will expose the service to host machine
-    expose: 
-      - "8080"
-    networks:
-      - ping-network
-  node:
-    build: ./src/node-server
-    command: yarn nodemon ./src/bin/www
-    image: node-server
-    # using expose only exposes the container in docker network
+    # expose: 
+    #   - "5672"
     ports:  
-      - 8001:8001
-    depends_on:
-      - go
+    - "15672:15672"
+    - "5672:5672"
     networks:
-      - ping-network
-    # environment:
-    volumes: 
-      - ./src/node-server/src:/home/node/app/src/
+      - rabbit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://rabbit:15672"]
+      interval: 3s
+      timeout: 1s
+      retries: 3
+  orig:
+    build: ./src/orig
+    command: yarn start
+    image: orig
+    restart: always # on-failure https://docs.docker.com/config/containers/start-containers-automatically/#use-a-restart-policy
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
+  obse:
+    build: ./src/obse
+    command: yarn start
+    image: obse
+    restart: always
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
+  imed:
+    build: ./src/imed
+    command: yarn start
+    image: imed
+    restart: always
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
+  # httpserv:
+  #   build: ./src/httpserv
+  #   command: node ./src/bin/www
+  #   image: httpserv
+  #   # using expose only exposes the container in docker network
+  #   ports:  
+  #     - 8080:8080
+  #   restart: on-failure
+  #   depends_on:
+  #     - rabbit
+  #   networks:
+  #     - rabbit-network
 networks:
-  ping-network:
+  rabbit-network:
 
 # volumes:
 

@@ -5,7 +5,7 @@ const logger = pino({level:'debug'})
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE} = process.env
 
 async function initProducer() {
-  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${RABBIT_SERVER_URL}:${RABBIT_SERVER_PORT}`)
+  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@rabbit:${RABBIT_SERVER_PORT}`)
   const channel = await connection.createChannel()
   await channel.assertExchange(EXCHANGE, 'topic', {
     durable: false
@@ -14,7 +14,7 @@ async function initProducer() {
 }
 
 async function initConsumer() {
-  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${RABBIT_SERVER_URL}:${RABBIT_SERVER_PORT}`)
+  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@rabbit:${RABBIT_SERVER_PORT}`)
   const channel = await connection.createChannel()
   await channel.assertExchange(EXCHANGE, 'topic', {
     durable: false

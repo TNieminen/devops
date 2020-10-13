@@ -14,7 +14,7 @@ COPY --chown=node:node package.json yarn.lock /home/node/app/
 RUN yarn install --frozen-lockfile
 
 # chown moved packages, remember ./ is now at workdir root
-COPY --chown=node:node ./src/bin/www /home/node/app/bin/
-COPY --chown=node:node ./src/index.js /home/node/app/
+COPY --chown=node:node ./.env /home/node/app/
+COPY --chown=node:node ./index.js /home/node/app/
 
-CMD [ "node", "./src/bin/www"]
+CMD [ "node", "./index.js"]

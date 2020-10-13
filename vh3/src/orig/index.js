@@ -3,16 +3,16 @@ const pino = require('pino')
 const rabbitMQ = require('amqplib')
 const logger = pino({level:'debug'})
 
-// Dev modules
-require('../imed')
-require('../obse')
-require('../httpserv/src/bin/www')
+// // Dev modules
+// require('../imed')
+// require('../obse')
+// require('../httpserv/src/bin/www')
 //
 
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE} = process.env
 
 async function startORIG() {
-  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${RABBIT_SERVER_URL}:${RABBIT_SERVER_PORT}`)
+  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@rabbit:${RABBIT_SERVER_PORT}`)
   const channel = await connection.createChannel()
   await channel.assertExchange(EXCHANGE, 'topic', {
     durable: false
@@ -21,6 +21,7 @@ async function startORIG() {
   // we don't need a queue on the publisher side since we are using an exchange with a topic strategy
   setInterval(() => {
     const message = `MSG_${iterator += 1}`
+    logger.info(`Sending message ${message}`)
     channel.publish(EXCHANGE,'my.o', Buffer.from(message))
     if (iterator === 3) {
       iterator = 0

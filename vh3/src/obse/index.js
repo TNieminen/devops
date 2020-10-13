@@ -10,7 +10,7 @@ async function startObserver() {
     if (err && err.code !== 'ENOENT') {
       throw err
     }
-    const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${RABBIT_SERVER_URL}:${RABBIT_SERVER_PORT}`)
+    const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@rabbit:${RABBIT_SERVER_PORT}`)
     const channel = await connection.createChannel()
     await channel.assertExchange(EXCHANGE, 'topic', {
       durable: false

@@ -2,6 +2,7 @@ version: '3.2'
 services:
   # https://stackoverflow.com/questions/31746182/docker-compose-wait-for-container-x-before-starting-y
   # https://stackoverflow.com/questions/47710767/what-is-the-alternative-to-condition-form-of-depends-on-in-docker-compose-versio
+  # https://stackoverflow.com/questions/57065750/docker-compose-volume-overrides-copy-in-multi-stage-build
   rabbit:
     image: rabbitmq:3-management
     #using ports will expose the service to host machine
@@ -35,6 +36,9 @@ services:
       - rabbit
     networks:
       - rabbit-network
+    volumes: 
+      - data:/home/node/data/
+      - ./src/obse/:/home/node/app/
   imed:
     build: ./src/imed
     command: yarn start
@@ -44,20 +48,22 @@ services:
       - rabbit
     networks:
       - rabbit-network
-  # httpserv:
-  #   build: ./src/httpserv
-  #   command: node ./src/bin/www
-  #   image: httpserv
-  #   # using expose only exposes the container in docker network
-  #   ports:  
-  #     - 8080:8080
-  #   restart: on-failure
-  #   depends_on:
-  #     - rabbit
-  #   networks:
-  #     - rabbit-network
+  httpserv:
+    build: ./src/httpserv
+    command: yarn start
+    image: httpserv
+    # using expose only exposes the container in docker network
+    ports:  
+      - 8080:8080
+    restart: on-failure
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
+    volumes: 
+      - data:/home/node/data/
+      - ./src/httpserv/:/home/node/app/
 networks:
   rabbit-network:
-
-# volumes:
-
+volumes:
+  data:

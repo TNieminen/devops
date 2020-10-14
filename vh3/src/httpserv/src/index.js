@@ -14,7 +14,7 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/', async(req,res) => {
-  fs.readFile('../output.txt','utf-8',(err, data) => {
+  fs.readFile('../data/output.txt','utf-8',(err, data) => {
     console.table(data)
     if (err) {
       res.status(500).send(err.toString())

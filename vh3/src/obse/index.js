@@ -6,7 +6,7 @@ const fs = require('fs')
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE} = process.env
 
 async function startObserver() {
-  fs.unlink('../output.txt',async(err) => {
+  fs.unlink('../data/output.txt',async(err) => {
     if (err && err.code !== 'ENOENT') {
       throw err
     }
@@ -22,7 +22,8 @@ async function startObserver() {
       if (message !== null) {
         channel.ack(message) // https://www.rabbitmq.com/confirms.html
         const logMessage = `${new Date().toISOString()} Topic ${message.fields.routingKey}: ${message.content.toString()}`
-        fs.appendFile('../output.txt',`${logMessage}\n`,(error) => {
+        console.warn(__dirname)
+        fs.appendFile('../data/output.txt',`${logMessage}\n`,(error) => {
           console.error(error)
         })
         logger.info(`OBSE: ${logMessage}`)

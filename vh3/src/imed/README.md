@@ -1,5 +1,5 @@
 # Description
-
+This services uses rabbitMQ as its messaging backbone and provides the following functionalities:
 - Subscribes for messages from my.o
 - Publishes message to my.i
 - Every time IMED receives a message from topic my.o:

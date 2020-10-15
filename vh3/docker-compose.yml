@@ -1,12 +1,7 @@
-# https://stackoverflow.com/questions/31746182/docker-compose-wait-for-container-x-before-starting-y
-  # https://stackoverflow.com/questions/47710767/what-is-the-alternative-to-condition-form-of-depends-on-in-docker-compose-versio
-  # https://stackoverflow.com/questions/57065750/docker-compose-volume-overrides-copy-in-multi-stage-build
-  # on-failure https://docs.docker.com/config/containers/start-containers-automatically/#use-a-restart-policy
-
 version: '3.2'
 services:
   rabbit:
-    image: rabbitmq:3-management
+    image: rabbitmq:3-management # https://hub.docker.com/_/rabbitmq
     expose: 
       - "5672"
     # For debugging and development to access rabbit in local network
@@ -34,13 +29,14 @@ services:
       - rabbit
     networks:
       - rabbit-network
+    volumes:
+      - ./src/rabbitmq:/home/node/rabbitmq
   obse:
     build: ./src/obse
     command: yarn start
     image: obse
-    # https://docs.docker.com/compose/environment-variables/
     environment: 
-      - ENV=docker
+      - ENV=docker # https://docs.docker.com/compose/environment-variables/
     restart: always
     depends_on:
       - rabbit
@@ -48,6 +44,7 @@ services:
       - rabbit-network
     volumes: 
       - data:/home/node/data/
+      - ./src/rabbitmq:/home/node/rabbitmq
   imed:
     build: ./src/imed
     command: yarn start
@@ -59,6 +56,8 @@ services:
       - rabbit
     networks:
       - rabbit-network
+    volumes:
+      - ./src/rabbitmq:/home/node/rabbitmq
   httpserv:
     build: ./src/httpserv
     command: yarn start

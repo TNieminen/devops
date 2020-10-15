@@ -1,55 +1,39 @@
 require('dotenv').config()
-const pino = require('pino')
-const rabbitMQ = require('amqplib')
-const logger = pino({level:'debug'})
+const rabbitMq = require('amqplib')
+const {initExchangeConsumer, initExchangeProducer} = require('../rabbitmq')
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV} = process.env
 const serverUrl = ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL
 
-async function initProducer() {
-  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}:${RABBIT_SERVER_PORT}`)
-  const channel = await connection.createChannel()
-  await channel.assertExchange(EXCHANGE, 'topic', {
-    durable: false
+
+
+async function start() {
+  const producer = await initExchangeProducer({
+    rabbitMq,
+    serverUrl: ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL,
+    serverPort: RABBIT_SERVER_PORT,
+    userName: RABBIT_USERNAME,
+    password: RABBIT_PASSWORD,
+    exchange: EXCHANGE
   })
-  return channel
-}
 
-async function initConsumer() {
-  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@rabbit:${RABBIT_SERVER_PORT}`)
-  const channel = await connection.createChannel()
-  await channel.assertExchange(EXCHANGE, 'topic', {
-    durable: false
+  const {channel:consumer, queue} = await initExchangeConsumer({
+    rabbitMq,
+    serverUrl: ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL,
+    serverPort: RABBIT_SERVER_PORT,
+    userName: RABBIT_USERNAME,
+    password: RABBIT_PASSWORD,
+    topic: 'my.o',
+    exchange: EXCHANGE
   })
-  // empty string so we can assign a random queue automatically
-  const q = await channel.assertQueue('', {exclusive: true})
-  channel.bindQueue(q.queue, EXCHANGE, 'my.o')
-  return {channel, queue:q.queue}
+  consumer.consume(queue, (message) => {
+    if (message !== null) {
+      setTimeout(() => {
+        const sendMessage = `Got message ${message.content.toString()}`
+        producer.publish(EXCHANGE,'my.i', Buffer.from(sendMessage))
+        consumer.ack(message)
+      },1000)
+    }
+  })
 }
 
-class Imed {
-
-  constructor() {
-    this.init()
-  }
-  
-  async init() {
-    console.warn('SERVERURL!!!!!!!!!!!!!!!', serverUrl)
-    console.warn('ENV!!!!!!!!!!', process.env)
-    const {channel, queue} = await initConsumer()
-    this.consumer = channel
-    this.consumerQueue = queue
-    this.producer = await initProducer()
-    this.consumer.consume(this.consumerQueue, (message) => {
-      if (message !== null) {
-        setTimeout(() => {
-          const sendMessage = `Got message ${message.content.toString()}`
-          this.producer.publish(EXCHANGE,'my.i', Buffer.from(sendMessage))
-          this.consumer.ack(message) // https://www.rabbitmq.com/confirms.html
-          logger.debug(`IMED ${sendMessage}, emitting to my.i`)  
-        },1000)
-      }
-    })
-  }
-}
-
-exports.imed = new Imed()
+start()

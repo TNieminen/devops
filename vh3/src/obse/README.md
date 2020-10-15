@@ -1,5 +1,5 @@
 # Description
-
+This services uses rabbitMQ as its messaging backbone and provides the following functionalities:
 - Every time OBSE receives a message from any of the topics:
     - OBSE builds a string “{timestamp} Topic {topic}: {message}” without quotes
         - {topic} is the topic that delivered the message

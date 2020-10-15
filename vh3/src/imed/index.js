@@ -2,10 +2,11 @@ require('dotenv').config()
 const pino = require('pino')
 const rabbitMQ = require('amqplib')
 const logger = pino({level:'debug'})
-const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE} = process.env
+const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV} = process.env
+const serverUrl = ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL
 
 async function initProducer() {
-  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@rabbit:${RABBIT_SERVER_PORT}`)
+  const connection = await rabbitMQ.connect(`amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}:${RABBIT_SERVER_PORT}`)
   const channel = await connection.createChannel()
   await channel.assertExchange(EXCHANGE, 'topic', {
     durable: false
@@ -32,6 +33,8 @@ class Imed {
   }
   
   async init() {
+    console.warn('SERVERURL!!!!!!!!!!!!!!!', serverUrl)
+    console.warn('ENV!!!!!!!!!!', process.env)
     const {channel, queue} = await initConsumer()
     this.consumer = channel
     this.consumerQueue = queue

@@ -1,28 +1,35 @@
-version: '3.2'
-services:
-  # https://stackoverflow.com/questions/31746182/docker-compose-wait-for-container-x-before-starting-y
+# https://stackoverflow.com/questions/31746182/docker-compose-wait-for-container-x-before-starting-y
   # https://stackoverflow.com/questions/47710767/what-is-the-alternative-to-condition-form-of-depends-on-in-docker-compose-versio
   # https://stackoverflow.com/questions/57065750/docker-compose-volume-overrides-copy-in-multi-stage-build
+  # on-failure https://docs.docker.com/config/containers/start-containers-automatically/#use-a-restart-policy
+
+version: '3.2'
+services:
   rabbit:
     image: rabbitmq:3-management
-    #using ports will expose the service to host machine
-    # expose: 
-    #   - "5672"
-    ports:  
-    - "15672:15672"
-    - "5672:5672"
+    expose: 
+      - "5672"
+    # For debugging and development to access rabbit in local network
+    # ports:  
+    # - "15672:15672"
+    # - "5672:5672"
     networks:
       - rabbit-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://rabbit:15672"]
-      interval: 3s
-      timeout: 1s
+      interval: 5s
+      timeout: 3s
       retries: 3
   orig:
     build: ./src/orig
     command: yarn start
     image: orig
-    restart: always # on-failure https://docs.docker.com/config/containers/start-containers-automatically/#use-a-restart-policy
+    # The rabbit startup will take some time in which time the initializations
+    # will fail, since we cannot wait for the health check to pass in 
+    # docker-compose version 3+ we'll just restart on failure
+    restart: always
+    environment: 
+      - ENV=docker 
     depends_on:
       - rabbit
     networks:
@@ -31,6 +38,9 @@ services:
     build: ./src/obse
     command: yarn start
     image: obse
+    # https://docs.docker.com/compose/environment-variables/
+    environment: 
+      - ENV=docker
     restart: always
     depends_on:
       - rabbit
@@ -38,12 +48,13 @@ services:
       - rabbit-network
     volumes: 
       - data:/home/node/data/
-      - ./src/obse/:/home/node/app/
   imed:
     build: ./src/imed
     command: yarn start
     image: imed
     restart: always
+    environment: 
+      - ENV=docker
     depends_on:
       - rabbit
     networks:
@@ -52,17 +63,15 @@ services:
     build: ./src/httpserv
     command: yarn start
     image: httpserv
-    # using expose only exposes the container in docker network
     ports:  
       - 8080:8080
-    restart: on-failure
+    restart: always
     depends_on:
       - rabbit
     networks:
       - rabbit-network
     volumes: 
       - data:/home/node/data/
-      - ./src/httpserv/:/home/node/app/
 networks:
   rabbit-network:
 volumes:

@@ -112,3 +112,8 @@ Sometimes a simple route is not enough, for instance if we are routing
 logs to different queues depending on the severity, we might also
 want to differentiate on the origin. A warning log from a critical system
 could for instance want to be routed to a queue that normally handles only errors.
+
+## NOTEs
+
+You can ssh into a running container with exect
+https://phase2.github.io/devtools/common-tasks/ssh-into-a-container/

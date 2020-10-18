@@ -21,6 +21,9 @@ Functionality
 Additional notes
 - The project uses RabbitMQ as the message broker
 
+
+# Getting started
+
 ## Running the project
 
 `docker-compose up --build`
@@ -39,6 +42,33 @@ you should be able to get the system output served by httpserv module at
 If you want to develop individual files against rabbit, you can initialize the service separately with
 `docker run -d -p 15672:15672 -p 5672:5672 --name rabbit-test-for-medium rabbitmq:3-management`
 and access it on the browser at `localhost:15672` with password and username = guest
+
+
+# Learnings and reflection
+
+In my experience topic based queue communication is a great way to improve the robustness and reliability of a system.
+For instance what I've used queues for in the past was to ensure that audio buffers were uploaded,
+processed and saved in a safe manner. This was important, because this datatype represented a non-repeating,
+unique and irreplaceable piece of information. Whereas in a HTTP based system might fail a request and the data
+would be lost forever with a queue system (in this case Kue running on Redis) allowed me to 
+1. Make sure that the queue system received the message, and re-send if necessary.
+2. Make sure that the items don't get lost via redundancy of queues and data replication in case of a redis service crash
+3. Make sure that items are removed from the queue only after the item has been marked completed
+In addition most queue systems allow to set both timed events and TTL events, where an event would be fired at, or after
+some time, and where an item might have a specific time to be consumed before it was removed from the queue or possibly
+moved to a separate dead-letter queue for later manual or automatic processing. None of these features are baked in HTTP based communication.
+
+What sets RabbitMQ apart for Redis, or for instance AWS SQS, is it's topic based communication, which makes it easy
+to consume the same events in multiple places and also multiple times if necessary. In addition the documentation
+and getting started guides of the software are excellent. However even with this, if I had to pick a queue system
+I would go for SQS in the future, this is because rabbitMQ need to be managed by you, or you have to pay someone to manage it.
+At this point when you are paying for a service SQS will be a cheaper option. If you decide to self-host, you need
+to start worrying about redundancy and clustering of the service, which is a pain of itself. In addition
+some traditional limitations of SQS, such as no FIFO support have been [solved already](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html).
+
+As a takeaway RabbitMQ does everything what a queue system needs to do and does it well. However for most uses cases
+it seems that a better option would be to opt for a hosted service like SQS.
+
 
 
 ## Notes on docker
@@ -86,7 +116,7 @@ NOTE!
 `docker inspect <container name>`
 `docker inspect <image name>`
 
-**List things**
+**List available things**
 running containers
 `docker ps`
 all containers
@@ -118,8 +148,9 @@ https://docs.docker.com/engine/reference/commandline/container_prune/
 
 ## RabbitMQ
 
-https://www.rabbitmq.com/tutorials/tutorial-one-javascript.html
-http://www.squaremobius.net/amqp.node/channel_api.html#channel
+RabbitMQ is one of the most popular open source message brokers including message queuing, topic based
+communication with included support for data safety. 
+It is used by small to large enterprises, it is highly performant, scalable, lightweight and easy to deploy both on premises and to the cloud.
 
 ### Publisher
 Sends messages to an exchange or directly to a queue
@@ -204,3 +235,8 @@ Sometimes a simple route is not enough, for instance if we are routing
 logs to different queues depending on the severity, we might also
 want to differentiate on the origin. A warning log from a critical system
 could for instance want to be routed to a queue that normally handles only errors.
+
+### Sources
+
+https://www.rabbitmq.com/tutorials/tutorial-one-javascript.html
+http://www.squaremobius.net/amqp.node/channel_api.html#channel

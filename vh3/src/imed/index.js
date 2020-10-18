@@ -2,8 +2,6 @@ require('dotenv').config()
 const rabbitMq = require('amqplib')
 const {initExchangeConsumer, initExchangeProducer} = require('../rabbitmq')
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV} = process.env
-const serverUrl = ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL
-
 
 
 async function start() {
@@ -25,6 +23,7 @@ async function start() {
     topic: 'my.o',
     exchange: EXCHANGE
   })
+  
   consumer.consume(queue, (message) => {
     if (message !== null) {
       setTimeout(() => {

@@ -1,4 +1,5 @@
 # Description
+*Original project outline can be found in the attached assignment.pdf document*
 
 The goal of this repository is to implement message routing with topics named as
 - my.o

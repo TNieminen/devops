@@ -2,7 +2,7 @@ require('dotenv').config()
 const rabbitMq = require('amqplib')
 const {initExchangeProducer} = require('../rabbitmq')
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV} = process.env
-const messageInterval = 1000
+const messageIntervalTime = 3000
 const amountOfMessages = 3 
 
 async function start() {
@@ -17,14 +17,14 @@ async function start() {
   let iterator = 0
   // the interval of a single item will be equal to the amount of items in seconds
   // for instance if amountOfMessage = 3, each message will be sent every three seconds
-  setInterval(() => {
+  const messageInterval = setInterval(() => {
     const message = `MSG_${iterator += 1}`
     // we don't need a queue on the publisher side since we are using an exchange with a topic strategy
     channel.publish(EXCHANGE,'my.o', Buffer.from(message))
     if (iterator === amountOfMessages) {
-      iterator = 0
+      clearInterval(messageInterval)
     }  
-  },messageInterval)
+  },messageIntervalTime)
 }
 
 start()

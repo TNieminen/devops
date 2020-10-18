@@ -251,6 +251,6 @@ http://www.squaremobius.net/amqp.node/channel_api.html#channel
 
 
 # TODO
-[ ] And hot code reloading to all scripts
-[ ] Allow development without a Docker environment
-[ ] Consider using Lerna monorepo and changing the modules to be published as NPM packages
+- [ ] And hot code reloading to all scripts
+- [ ] Allow development without a Docker environment
+- [ ] Consider using Lerna monorepo and changing the modules to be published as NPM packages

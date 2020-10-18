@@ -34,6 +34,11 @@ you should be able to get the system output served by httpserv module at
 
 ## Project structure
 
+The project is split into self contained micro services with their of package.json and dependency management.
+This way they can change independently from each other. This is a bit inconvenient because we need
+to run yarn or npm install separately in each package. However this is not needed when development happens in the Docker
+environment.
+
 - Root includes assigment.pdf which includes detailed instructions on the project and our docker-compose config file
 - Each aforementioned module is listed under source with their own package.json, env, README and so on
 
@@ -42,6 +47,9 @@ you should be able to get the system output served by httpserv module at
 If you want to develop individual files against rabbit, you can initialize the service separately with
 `docker run -d -p 15672:15672 -p 5672:5672 --name rabbit-test-for-medium rabbitmq:3-management`
 and access it on the browser at `localhost:15672` with password and username = guest
+
+Using the services is however not supported out of the box without a Docker environment as of now, but
+this might be added later
 
 
 # Learnings and reflection
@@ -240,3 +248,9 @@ could for instance want to be routed to a queue that normally handles only error
 
 https://www.rabbitmq.com/tutorials/tutorial-one-javascript.html
 http://www.squaremobius.net/amqp.node/channel_api.html#channel
+
+
+# TODO
+[ ] And hot code reloading to all scripts
+[ ] Allow development without a Docker environment
+[ ] Consider using Lerna monorepo and changing the modules to be published as NPM packages

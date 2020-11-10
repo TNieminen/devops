@@ -1,3 +1,28 @@
+- [Description](#description)
+- [Getting started](#getting-started)
+  - [Running the project](#running-the-project)
+  - [Project structure](#project-structure)
+  - [Development](#development)
+- [Learnings and reflection](#learnings-and-reflection)
+  - [Notes on docker](#notes-on-docker)
+    - [Up & Down](#up--down)
+    - [On volumes](#on-volumes)
+    - [Useful commands](#useful-commands)
+    - [Sources](#sources)
+  - [RabbitMQ](#rabbitmq)
+    - [Publisher](#publisher)
+    - [Consumer](#consumer)
+    - [Queue](#queue)
+    - [Receiving messages](#receiving-messages)
+    - [Sending messages](#sending-messages)
+    - [Publishing a message](#publishing-a-message)
+    - [Exchange](#exchange)
+      - [Fanout](#fanout)
+      - [Direct](#direct)
+    - [Topic](#topic)
+    - [Sources](#sources-1)
+- [TODO](#todo)
+
 # Description
 *Original project outline can be found in the attached assignment.pdf document*
 

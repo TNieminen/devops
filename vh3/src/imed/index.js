@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv-defaults').config()
 const rabbitMq = require('amqplib')
 const {initExchangeConsumer, initExchangeProducer} = require('../rabbitmq')
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV} = process.env

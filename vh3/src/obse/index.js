@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv-defaults').config()
 const pino = require('pino')
 const logger = pino({level:'debug'})
 const fs = require('fs')

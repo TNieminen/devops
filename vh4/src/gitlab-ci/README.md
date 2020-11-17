@@ -11,6 +11,6 @@ you can find two files:
 - [ ]  Define pipeline using gitlab-ci.yaml. The result should be a running system so a `git push` should result in the system being up and running
 - [ ]  Test the pipeline with current version of the application
 
-## Sources
+## CI/CD
 
-https://gitlab.com/gitlab-org/gitlab-foss/-/issues/50851
+CI/CD yml file definition reference is available [here](https://docs.gitlab.com/ee/ci/yaml/)

@@ -315,6 +315,14 @@ git push upstream
 
 **Push to multiple remotes**
 
+```sh
+# Create a new remote called "all" with the URL of the primary repo.
+git remote add all git@github.com:jigarius/toggl2redmine.git
+# Re-register the remote as a push URL.
+git remote set-url --add --push all git@github.com:jigarius/toggl2redmine.git
+# Add a push URL to a remote. This means that "git push" will also push to this git URL.
+git remote set-url --add --push all git@bitbucket.org:jigarius/toggl2redmine.git
+```
 
 
 # TODO

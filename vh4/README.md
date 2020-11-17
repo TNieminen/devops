@@ -301,8 +301,20 @@ git remote -v
 # git remote remove REMOTE-ID
 git remote remove upstream
 ```
+**Change url of an existing remote**
+```sh
+# The syntax is: git remote set-url REMOTE-ID REMOTE-URL
+git remote set-url upstream git@foobar.com:jigarius/toggl2redmine.git
+```
+
+**Push to single remote**
+```sh
+# git push REMOTE-ID
+git push upstream
+```
 
 **Push to multiple remotes**
+
 
 
 # TODO

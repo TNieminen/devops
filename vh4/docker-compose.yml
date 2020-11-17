@@ -1,0 +1,77 @@
+version: '3.2'
+services:
+  rabbit:
+    image: rabbitmq:3-management # https://hub.docker.com/_/rabbitmq
+    expose: 
+      - "5672"
+    # For debugging and development to access rabbit in local network
+    # ports:  
+    # - "15672:15672"
+    # - "5672:5672"
+    networks:
+      - rabbit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://rabbit:15672"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+  orig:
+    build: ./src/orig
+    command: yarn start
+    image: orig
+    # The rabbit startup will take some time in which time the initializations
+    # will fail, since we cannot wait for the health check to pass in 
+    # docker-compose version 3+ we'll just restart on failure
+    restart: always
+    environment: 
+      - ENV=docker 
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
+    volumes:
+      - ./src/rabbitmq:/home/node/rabbitmq
+  obse:
+    build: ./src/obse
+    command: yarn start
+    image: obse
+    environment: 
+      - ENV=docker # https://docs.docker.com/compose/environment-variables/
+    restart: always
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
+    volumes: 
+      - data:/home/node/data/
+      - ./src/rabbitmq:/home/node/rabbitmq
+  imed:
+    build: ./src/imed
+    command: yarn start
+    image: imed
+    restart: always
+    environment: 
+      - ENV=docker
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
+    volumes:
+      - ./src/rabbitmq:/home/node/rabbitmq
+  httpserv:
+    build: ./src/httpserv
+    command: yarn start
+    image: httpserv
+    ports:  
+      - 8080:8080
+    restart: always
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
+    volumes: 
+      - data:/home/node/data/
+networks:
+  rabbit-network:
+volumes:
+  data:

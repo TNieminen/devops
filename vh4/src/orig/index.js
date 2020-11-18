@@ -1,18 +1,24 @@
 require('dotenv-defaults').config()
 const rabbitMq = require('amqplib')
-const {initExchangeProducer} = require('../rabbitmq')
-const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV} = process.env
+const pino = require('pino')
+const {initExchangeProducer} = require('@badgrhammer/rabbitmq-helpers')
+const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV, LOGLEVEL} = process.env
 const messageIntervalTime = 3000
 const amountOfMessages = 3 
 const setupTimeout = 5000
 
+
+const logger = pino({level: LOGLEVEL || 'error'})
+const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
+const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
+const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
+
+console.log('ENV', ENV)
+console.log('Connectionstring ORIG', connectionString)
 async function start() {
   const channel = await initExchangeProducer({
     rabbitMq,
-    serverUrl: ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL,
-    serverPort: RABBIT_SERVER_PORT,
-    userName: RABBIT_USERNAME,
-    password: RABBIT_PASSWORD,
+    connectionString,
     exchange: EXCHANGE
   })
   let iterator = 0

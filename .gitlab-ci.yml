@@ -19,3 +19,26 @@ production:
     - dpl --provider=heroku --app=devops-rabbitmq --api-key=$HEROKU_PRODUCTION_API_KEY
   only:
     - master
+# Deploying with Docker
+# https://devcenter.heroku.com/categories/deploying-with-docker
+# Decided to build images because cannot be bothered to pre-build and upload to cloud in CI/CD
+# On Docker compose files
+# https://stackoverflow.com/questions/46904060/how-to-push-docker-containers-managed-by-docker-compose-to-heroku
+# Docker swarm instead of docker compose
+# https://stackoverflow.com/questions/49999920/docker-compose-heroku-hostname-links-and-production-deployment
+# Addon that manages the swarm
+# https://devcenter.heroku.com/articles/dockhero
+
+# Deploying to heroku
+# This article is great:
+# https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
+# However it leaves out two important details:
+# 1. Your app doesn't necessarily have an instance running automatically and you need to run:
+# heroku ps:scale web=1 -a devops-container
+# where web is the service you want to scale
+# 2. The container app will still only have one entrypoint and everything else has to be a worker instance!
+# 3. In order for the entrypoint to work, you need to define it as service type web, and in the multi-container mode
+# you need to name the Dockerfile as Dockerfile.web. I tried long with Dockerfile.httpserv just to realize it
+# is not being connected to even when the port was being read correctly!
+# https://stackoverflow.com/questions/60570977/heroku-docker-spring-boot-image-error-503-h14
+# Next up would be to deploy other apps and update env variables to make things work!

@@ -14,15 +14,16 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/', async(req,res) => {
-  fs.readFile(path.resolve(__dirname,dataPath),'utf-8',(err, data) => {
-    if (!err) {
-      return res.status(200).send(data)
-    }
-    if (err.code === 'ENOENT') {
-      return res.status(404).send('Service is starting up, wait a moment')
-    }
-    return res.status(500).send(err.toString())
-  })
+  return res.sendStatus(200)
+  // fs.readFile(path.resolve(__dirname,dataPath),'utf-8',(err, data) => {
+  //   if (!err) {
+  //     return res.status(200).send(data)
+  //   }
+  //   if (err.code === 'ENOENT') {
+  //     return res.status(404).send('Service is starting up, wait a moment')
+  //   }
+  //   return res.status(500).send(err.toString())
+  // })
 })
 
 // catch 404 and forward to error handler

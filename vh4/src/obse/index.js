@@ -1,11 +1,15 @@
 require('dotenv-defaults').config()
 const pino = require('pino')
-const logger = pino({level:'debug'})
 const fs = require('fs')
 const rabbitMq = require('amqplib')
-const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV} = process.env
-const {initExchangeConsumer} = require('../rabbitmq/')
+const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV, LOGLEVEL} = process.env
+const {initExchangeConsumer} = require('@badgrhammer/rabbitmq-helpers')
 const dataPath = '../data/output.txt'
+
+const logger = pino({level: LOGLEVEL || 'error'})
+const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
+const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
+const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
 
 async function start() {
   fs.unlink(dataPath,async(err) => {
@@ -14,12 +18,9 @@ async function start() {
     }
     const {channel, queue} = await initExchangeConsumer({
       rabbitMq,
-      serverUrl: ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL,
-      serverPort: RABBIT_SERVER_PORT,
-      userName: RABBIT_USERNAME,
-      password: RABBIT_PASSWORD,
+      connectionString,
       topic: 'my.#',
-      exchange: EXCHANGE
+      exchange: EXCHANGE      
     })
     channel.consume(queue, (message) => {
       if (message !== null) {

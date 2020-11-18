@@ -1,30 +1,35 @@
 version: '3.2'
 services:
+  # This service is built only for local development. In deployed apps we use an external hostel rabbitMQ instance
   rabbit:
     image: rabbitmq:3-management # https://hub.docker.com/_/rabbitmq
-    expose: 
-      - "5672"
+    expose:
+      - '5672'
     # For debugging and development to access rabbit in local network
-    # ports:  
+    # ports:
     # - "15672:15672"
     # - "5672:5672"
     networks:
       - rabbit-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://rabbit:15672"]
+      test: ['CMD', 'curl', '-f', 'http://rabbit:15672']
       interval: 5s
       timeout: 3s
       retries: 3
   orig:
-    build: ./src/orig
+    build:
+      # Naming standard because of Heroku
+      # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
+      context: ./src/orig
+      dockerfile: Dockerfile.orig
     command: yarn start
     image: orig
     # The rabbit startup will take some time in which time the initializations
-    # will fail, since we cannot wait for the health check to pass in 
+    # will fail, since we cannot wait for the health check to pass in
     # docker-compose version 3+ we'll just restart on failure
     restart: always
-    environment: 
-      - ENV=docker 
+    environment:
+      - ENV=development
     depends_on:
       - rabbit
     networks:
@@ -32,26 +37,34 @@ services:
     volumes:
       - ./src/rabbitmq:/home/node/rabbitmq
   obse:
-    build: ./src/obse
+    build:
+      # Naming standard because of Heroku
+      # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
+      context: ./src/obse
+      dockerfile: Dockerfile.obse
     command: yarn start
     image: obse
-    environment: 
-      - ENV=docker # https://docs.docker.com/compose/environment-variables/
+    environment:
+      - ENV=development # https://docs.docker.com/compose/environment-variables/
     restart: always
     depends_on:
       - rabbit
     networks:
       - rabbit-network
-    volumes: 
+    volumes:
       - data:/home/node/data/
       - ./src/rabbitmq:/home/node/rabbitmq
   imed:
-    build: ./src/imed
+    build:
+      # Naming standard because of Heroku
+      # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
+      context: ./src/imed
+      dockerfile: Dockerfile.imed
     command: yarn start
     image: imed
     restart: always
-    environment: 
-      - ENV=docker
+    environment:
+      - ENV=development
     depends_on:
       - rabbit
     networks:
@@ -59,17 +72,21 @@ services:
     volumes:
       - ./src/rabbitmq:/home/node/rabbitmq
   httpserv:
-    build: ./src/httpserv
+    build:
+      # Naming standard because of Heroku
+      # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
+      context: ./src/httpserv
+      dockerfile: Dockerfile.web
     command: yarn start
     image: httpserv
-    ports:  
+    ports:
       - 8080:8080
     restart: always
     depends_on:
       - rabbit
     networks:
       - rabbit-network
-    volumes: 
+    volumes:
       - data:/home/node/data/
 networks:
   rabbit-network:

@@ -13,24 +13,27 @@ const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
 
-console.log('ENV', ENV)
-console.log('Connectionstring ORIG', connectionString)
+function sendMessages(channel) {
+  let iterator = 0
+  const messageInterval = setInterval(() => {
+    const message = `MSG_${iterator += 1}`
+    // we don't need a queue on the publisher side since we are using an exchange with a topic strategy
+    channel.publish(EXCHANGE,'my.o', Buffer.from(message))
+    if (iterator === amountOfMessages) {
+      clearInterval(messageInterval)
+      sendMessages(channel)
+    }  
+  },messageIntervalTime)
+}
+
 async function start() {
   const channel = await initExchangeProducer({
     rabbitMq,
     connectionString,
     exchange: EXCHANGE
   })
-  let iterator = 0
   setTimeout(() => {
-    const messageInterval = setInterval(() => {
-      const message = `MSG_${iterator += 1}`
-      // we don't need a queue on the publisher side since we are using an exchange with a topic strategy
-      channel.publish(EXCHANGE,'my.o', Buffer.from(message))
-      if (iterator === amountOfMessages) {
-        clearInterval(messageInterval)
-      }  
-    },messageIntervalTime)
+    sendMessages(channel)
   }, setupTimeout)
 }
 

@@ -42,3 +42,13 @@ production:
 # is not being connected to even when the port was being read correctly!
 # https://stackoverflow.com/questions/60570977/heroku-docker-spring-boot-image-error-503-h14
 # Next up would be to deploy other apps and update env variables to make things work!
+
+# Steps of deploying to Heroku container service for multiple images
+# 1. You need an app to run against `heroku create`
+# 2. You need some images, they needs to be nested in sub directories as Dockerfile.servicename
+# notice that the service managing HTTP calls needs to be called Dockerfile.web to work
+# 3. You push images to heroku with `heroku container:push --recursive -a your-created-app-name`, this will build the images a push them
+# 4. You can always push new changes after doing changes to the files, if there are no changes no new image is uploaded
+# 4.1 You can also defined specifically what you want to push as `heroku container:push --recursive orig imed -a devops-imed-orig`
+#     which will push Dockerfile.imed and Dockerfile.orig
+# 5. You can then release containers with `heroku container:release web otherservice other2service -a your-created-app`

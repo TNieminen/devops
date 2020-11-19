@@ -79,6 +79,8 @@ services:
       dockerfile: Dockerfile.web
     command: yarn start
     image: httpserv
+    environment:
+      - ENV=development # https://docs.docker.com/compose/environment-variables/
     ports:
       - 8080:8080
     restart: always

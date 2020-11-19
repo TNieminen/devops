@@ -8,6 +8,7 @@
   "dependencies": {
     "@badgrhammer/rabbitmq-helpers": "^2.0.0",
     "amqplib": "^0.6.0",
+    "aws-sdk": "^2.795.0",
     "dotenv-defaults": "^2.0.1",
     "pino": "^6.7.0"
   }

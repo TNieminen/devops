@@ -9,9 +9,6 @@ const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
 
-console.log('=========================CONNECTION STRING')
-console.log(connectionString)
-console.log('=========================CONNECTION STRING')
 
 async function start() {
   const producer = await initExchangeProducer({

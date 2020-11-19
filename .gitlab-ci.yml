@@ -10,8 +10,11 @@ build_image:
   #   STORAGE_DRIVER: 'vfs'
   #   BUILDAH_FORMAT: 'docker'
   before_script:
+    - apt update
+    - apt install snapd
     - snap install node --classic --channel=14
     - snap install --classic heroku
+    # - curl https://cli-assets.heroku.com/install.sh | sh
   script:
     - ls
     - cd ./vh4

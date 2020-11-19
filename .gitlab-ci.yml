@@ -10,8 +10,8 @@ build_image:
   #   STORAGE_DRIVER: 'vfs'
   #   BUILDAH_FORMAT: 'docker'
   before_script:
-    - sudo snap install node --classic --channel=14
-    - sudo snap install --classic heroku
+    - snap install node --classic --channel=14
+    - snap install --classic heroku
   script:
     - ls
     - cd ./vh4

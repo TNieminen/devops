@@ -1,24 +1,41 @@
-# == Gitlab CI/CD quickstart
-# https://docs.gitlab.com/ee/ci/quick_start/README.html
-# == Gitlab yml file config reference ==
-# https://docs.gitlab.com/ee/ci/yaml/
-# == DPL deployment tool docs ==
-# https://docs.gitlab.com/ee/ci/examples/deployment/README.html
-# == Based upon Gitlab Python Heroku deployment example ==
-# https://docs.gitlab.com/ee/ci/examples/test-and-deploy-python-application-to-heroku.html
-
 stages:
-  - deploy
+  - build
 
-production:
-  stage: deploy
-  script:
-    - apt-get update -qy
-    - apt-get install -y ruby-dev
-    - gem install dpl
-    - dpl --provider=heroku --app=devops-rabbitmq --api-key=$HEROKU_PRODUCTION_API_KEY
+build_image:
   only:
     - master
+  # image: registry.gitlab.com/majorhayden/container-buildah
+  stage: build
+  # variables:
+  #   STORAGE_DRIVER: 'vfs'
+  #   BUILDAH_FORMAT: 'docker'
+  before_script:
+    - sudo snap install node --classic --channel=14
+    - sudo snap install --classic heroku
+  script:
+    - ls
+    - cd ./vh4
+    - npm install
+    - npm run push-httpserv
+# release:
+#   only:
+#     - master
+#   # image: node:10.17-alpine
+#   stage: release
+#   before_script:
+#     - apk add curl bash
+#     - curl https://cli-assets.heroku.com/install.sh | sh
+#   script:
+#     - heroku container:release -a heroku-app-name web
+# # Gitlab to heroku using docker
+# We could use docker commands and curl Heroku's API as outlined here:
+# https://medium.com/@nieldw/use-gitlab-ci-to-deploy-docker-images-to-heroku-4e544a3a3c38
+# However for consistency (since we are using heroku cli otherwise) and to make code a bit more understandable
+# let's just install Heroku CLI in our CI/CD pipeline and use already defined commands
+# https://dev.to/mattdark/from-gitlab-to-heroku-with-docker-3db2
+
+# Additional notes
+
 # Deploying with Docker
 # https://devcenter.heroku.com/categories/deploying-with-docker
 # Decided to build images because cannot be bothered to pre-build and upload to cloud in CI/CD
@@ -28,3 +45,12 @@ production:
 # https://stackoverflow.com/questions/49999920/docker-compose-heroku-hostname-links-and-production-deployment
 # Addon that manages the swarm
 # https://devcenter.heroku.com/articles/dockhero
+
+# == Gitlab CI/CD quickstart
+# https://docs.gitlab.com/ee/ci/quick_start/README.html
+# == Gitlab yml file config reference ==
+# https://docs.gitlab.com/ee/ci/yaml/
+# == DPL deployment tool docs ==
+# https://docs.gitlab.com/ee/ci/examples/deployment/README.html
+# == Based upon Gitlab Python Heroku deployment example ==
+# https://docs.gitlab.com/ee/ci/examples/test-and-deploy-python-application-to-heroku.html

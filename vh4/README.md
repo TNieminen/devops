@@ -22,6 +22,8 @@
     - [Topic](#topic)
     - [Sources](#sources-1)
 - [Working with multiple git remotes](#working-with-multiple-git-remotes)
+- [Heroku multi-container deployment](#heroku-multi-container-deployment)
+  - [Steps of deploying to Heroku container service for multiple images](#steps-of-deploying-to-heroku-container-service-for-multiple-images)
 - [TODO](#todo)
 
 # Description
@@ -323,6 +325,29 @@ git remote set-url --add --push all git@github.com:jigarius/toggl2redmine.git
 # Add a push URL to a remote. This means that "git push" will also push to this git URL.
 git remote set-url --add --push all git@bitbucket.org:jigarius/toggl2redmine.git
 ```
+
+# Heroku multi-container deployment
+
+This [article](https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images) is great resource
+on the topic.
+
+However it leaves out two important details:
+1. Your app doesn't necessarily have an instance running automatically and you need to run:
+`heroku ps:scale your-instance=1 -a your-app-name`
+2. The container app will still only have one entrypoint and everything else has to be a worker instance! In our case we have one web instance (httpserv) and other instances are just workers in the background
+3. On free tier you can have only one containers running on one instance, hence here we split httpserv and obse into one app and then orig and imed into one app
+4. In order for the entrypoint to work, you need to define it as service type web, and in the multi-container mode you need to name the Dockerfile as Dockerfile.web. In the beginning I was using Dockerfile.httpserv and then wondered why I was getting error `H14 error in heroku - “no web processes running”`, mind you, this same error happens also if you have no instances running as outlined in point 1
+
+
+## Steps of deploying to Heroku container service for multiple images
+1. You need an app to run against `heroku create`
+2. You need some images, they needs to be nested in sub directories as Dockerfile.servicename
+notice that the service managing HTTP calls needs to be called Dockerfile.web to work
+3. You push images to heroku with `heroku container:push --recursive -a your-created-app-name`, this will build the images a push them
+4. You can always push new changes after doing changes to the files, if there are no changes no new image is uploaded
+4.1 You can also defined specifically what you want to push as `heroku container:push --recursive orig imed -a devops-imed-orig`
+    which will push Dockerfile.imed and Dockerfile.orig
+5. You can then release containers with `heroku container:release web otherservice other2service -a your-created-app`
 
 
 # TODO

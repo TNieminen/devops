@@ -1,0 +1,16 @@
+{
+  "name": "vh4",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "push-httpserv": "heroku container:push --recursive web -a devops-httpserv-obse",
+    "push-obse": "heroku container:push --recursive obse -a devops-httpserv-obse",
+    "push-imed": "heroku container:push --recursive imed -a devops-imed-orig",
+    "push-orig": "heroku container:push --recursive orig -a devops-imed-orig",
+    "release-httpserv": "heroku container:release web -a devops-httpserv-obse",
+    "release-obse": "heroku container:release obse -a devops-httpserv-obse",
+    "release-imed": "heroku container:release imed -a devops-imed-orig",
+    "release-orig": "heroku container:release orig -a devops-imed-orig"
+  }
+}

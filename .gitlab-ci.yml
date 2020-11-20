@@ -14,7 +14,7 @@ build_image:
   script:
     - cd ./vh4
     - heroku container:push --recursive web obse -a devops-httpserv-obse
-    - heroku container:push --recursive imed orig -a devops-imed-orig"
+    - heroku container:push --recursive imed orig -a devops-imed-orig
     - heroku container:release web obse -a devops-httpserv-obse
     - heroku container:release imed orig -a devops-imed-orig
 # release:

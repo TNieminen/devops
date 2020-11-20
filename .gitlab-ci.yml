@@ -10,6 +10,7 @@ build_image:
     - apk add bash
     - apk add --update nodejs npm
     - curl https://cli-assets.heroku.com/install.sh | sh
+    - docker login --username=_ --password=$(heroku auth:token) registry.heroku.com
   script:
     - cd ./vh4
     - heroku container:push --recursive web obse -a devops-httpserv-obse

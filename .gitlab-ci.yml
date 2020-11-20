@@ -1,7 +1,7 @@
 build_image:
   only:
     - master
-  image: node:lts-slim
+  # image: node:lts-slim
   stage: build
   before_script:
     - curl https://cli-assets.heroku.com/install.sh | sh

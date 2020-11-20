@@ -1,11 +1,11 @@
 build_image:
   only:
     - master
-  # image: node:lts-slim
+  image: docker:latest
   stage: build
   before_script:
-    - apt-get update
-    - apt-get -y install curl
+    # - apt-get update
+    # - apt-get -y install curl
     - curl https://cli-assets.heroku.com/install.sh | sh
   script:
     - cd ./vh4

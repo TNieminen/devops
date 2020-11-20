@@ -4,6 +4,7 @@ build_image:
   # image: node:lts-slim
   stage: build
   before_script:
+    - apt-get update
     - apt-get -y install curl
     - curl https://cli-assets.heroku.com/install.sh | sh
     - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf

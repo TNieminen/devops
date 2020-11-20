@@ -8,8 +8,11 @@ build_image:
     - apt-get -y install curl
     - curl https://cli-assets.heroku.com/install.sh | sh
   script:
-    - ls
-    # - heroku logs --tail -a devops-httpserv-obse
+    - cd ./vh4
+    - heroku container:push --recursive web obse -a devops-httpserv-obse
+    - heroku container:push --recursive imed orig -a devops-imed-orig"
+    - heroku container:release web obse -a devops-httpserv-obse
+    - heroku container:release imed orig -a devops-imed-orig
 # release:
 #   only:
 #     - master

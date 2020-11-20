@@ -24,6 +24,7 @@
 - [Working with multiple git remotes](#working-with-multiple-git-remotes)
 - [Heroku multi-container deployment](#heroku-multi-container-deployment)
   - [Steps of deploying to Heroku container service for multiple images](#steps-of-deploying-to-heroku-container-service-for-multiple-images)
+  - [Notes for implementation](#notes-for-implementation)
 - [TODO](#todo)
 
 # Description
@@ -348,6 +349,12 @@ notice that the service managing HTTP calls needs to be called Dockerfile.web to
 4.1 You can also defined specifically what you want to push as `heroku container:push --recursive orig imed -a devops-imed-orig`
     which will push Dockerfile.imed and Dockerfile.orig
 5. You can then release containers with `heroku container:release web otherservice other2service -a your-created-app`
+
+## Notes for implementation
+- Since both httpserv and api service need to be online and heroku only allows one external connection per instance we'll deploy these on separate instances and they can communicate via http.
+  - I could even just split each instance to their own dyno so we  can scale them independently. Either use heroku API or drop down to bash and use Heroku CLI https://devcenter.heroku.com/articles/platform-api-reference
+- Communication between API gateway and the rest of the services will be done via RabbitMQ
+- 
 
 
 # TODO

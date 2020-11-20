@@ -28,7 +28,7 @@ function readS3File() {
 }
 
 exports.readFile = () => {
-  if (ENV === 'development') {
+  if (ENV !== 'production') {
     return readLocalFile()
   }
   return readS3File()

@@ -8,7 +8,8 @@ build_image:
     - apt-get -y install curl
     - curl https://cli-assets.heroku.com/install.sh | sh
   script:
-    - heroku logs --tail -a devops-httpserv-obse
+    - ls
+    # - heroku logs --tail -a devops-httpserv-obse
 # release:
 #   only:
 #     - master

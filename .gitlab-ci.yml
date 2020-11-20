@@ -1,25 +1,46 @@
-stages:
-  - build
-
 build_image:
   only:
     - master
-  # image: registry.gitlab.com/majorhayden/container-buildah
+  image: node:lts-slim
   stage: build
-  # variables:
-  #   STORAGE_DRIVER: 'vfs'
-  #   BUILDAH_FORMAT: 'docker'
   before_script:
-    - apt-get -y update
-    - apt-get -y install snapd
-    - snap install node --classic --channel=14
-    - snap install --classic heroku
-    # - curl https://cli-assets.heroku.com/install.sh | sh
+    - curl https://cli-assets.heroku.com/install.sh | sh
+    - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
   script:
-    - ls
-    - cd ./vh4
-    - npm install
-    - npm run push-httpserv
+    - heroku logs --tail -a devops-httpserv-obse
+# release:
+#   only:
+#     - master
+#   image: node:10.17-alpine
+#   stage: release
+#   before_script:
+#     - apk add curl bash
+#     - curl https://cli-assets.heroku.com/install.sh | sh
+#   script:
+#     - heroku container:release -a heroku-app-name web
+#########################3
+# image: docker:latest
+# services:
+#   - docker:dind
+
+# variables:
+#   DOCKER_DRIVER: overlay
+
+# stages:
+#   - build
+
+# docker-build:
+#   stage: build
+#   script:
+#     - docker build -f Dockerfile --iidfile imageid.txt -t registry.heroku.com/my-awesome-app/my-app .
+#     - docker login -u _ -p $HEROKU_TOKEN registry.heroku.com
+#     - docker push registry.heroku.com/my-awesome-app/my-app
+#     - apk add --no-cache curl
+#     - echo "Docker Image ID is $(cat imageid.txt)"
+#     - |-
+#       curl -X PATCH https://api.heroku.com/apps/my-awesome-app/formation --header "Content-Type: application/json" --header "Accept: application/vnd.heroku+json; version=3.docker-releases" --header "Authorization: Bearer ${HEROKU_TOKEN}" --data '{ "updates": [ { "type": "web", "docker_image": "'$(cat imageid.txt)'" } ] }
+################################333
+
 # release:
 #   only:
 #     - master
@@ -30,6 +51,7 @@ build_image:
 #     - curl https://cli-assets.heroku.com/install.sh | sh
 #   script:
 #     - heroku container:release -a heroku-app-name web
+
 # # Gitlab to heroku using docker
 # We could use docker commands and curl Heroku's API as outlined here:
 # https://medium.com/@nieldw/use-gitlab-ci-to-deploy-docker-images-to-heroku-4e544a3a3c38

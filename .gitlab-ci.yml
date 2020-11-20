@@ -7,6 +7,7 @@ build_image:
     # - apt-get update
     # - apt-get -y install curl
     - apk add curl
+    - apk add bash
     - curl https://cli-assets.heroku.com/install.sh | sh
   script:
     - cd ./vh4

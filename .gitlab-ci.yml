@@ -1,8 +1,23 @@
-build_image:
+stages:
+  - test
+  - deploy
+
+test:
+  image: docker:latest
+  stage: test
+  before_script:
+    - apk add curl
+    - apk add bash
+    - apk add --update nodejs npm
+  script:
+    - cd ./vh4
+    - npm run test-httpserv
+
+production:
   only:
     - master
   image: docker:latest
-  stage: build
+  stage: deploy
   before_script:
     - apk add curl
     - apk add bash
@@ -15,17 +30,6 @@ build_image:
     - heroku container:push --recursive imed orig -a devops-imed-orig
     - heroku container:release web obse -a devops-httpserv-obse
     - heroku container:release imed orig -a devops-imed-orig
-# release:
-#   only:
-#     - master
-#   # image: node:10.17-alpine
-#   stage: release
-#   before_script:
-#     - apk add curl bash
-#     - curl https://cli-assets.heroku.com/install.sh | sh
-#   script:
-#     - heroku container:release -a heroku-app-name web
-
 # # Gitlab to heroku using docker
 # We could use docker commands and curl Heroku's API as outlined here:
 # https://medium.com/@nieldw/use-gitlab-ci-to-deploy-docker-images-to-heroku-4e544a3a3c38

@@ -11,6 +11,7 @@
     "release-httpserv": "heroku container:release web -a devops-httpserv-obse",
     "release-obse": "heroku container:release obse -a devops-httpserv-obse",
     "release-imed": "heroku container:release imed -a devops-imed-orig",
-    "release-orig": "heroku container:release orig -a devops-imed-orig"
+    "release-orig": "heroku container:release orig -a devops-imed-orig",
+    "test-httpserv": "cd ./src/httpserv && yarn build && yarn docker-test"
   }
 }

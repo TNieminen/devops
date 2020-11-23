@@ -3,13 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./index.js"
+    "start": "node ./index.js",
+    "build": "docker build -f Dockerfile.obse --tag obse .",
+    "test": "NODE_ENV=test nyc mocha",
+    "docker-test": "docker run obse /bin/ash -c 'yarn test'"
   },
   "dependencies": {
     "@badgrhammer/rabbitmq-helpers": "^2.0.0",
     "amqplib": "^0.6.0",
     "aws-sdk": "^2.795.0",
     "dotenv-defaults": "^2.0.1",
-    "pino": "^6.7.0"
+    "pino": "^6.7.0",
+    "nyc": "^15.1.0",
+    "mocha": "^8.2.1",
+    "expect": "^26.6.2"
   }
 }

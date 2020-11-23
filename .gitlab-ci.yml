@@ -13,6 +13,9 @@ test:
   script:
     - cd ./vh4
     - yarn test-httpserv
+    - yarn test-imed
+    - yarn test-obse
+    - yarn test-orig
 
 production:
   only:

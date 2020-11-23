@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "start": "node ./src/bin/www",
-    "build": "docker build -f Dockerfile.web --tag httpserv .",
     "docker-start": "docker run -p 8081:8081 httpserv",
+    "build": "docker build -f Dockerfile.web --tag httpserv .",
     "test": "NODE_ENV=test nyc mocha",
-    "docker-test": "docker run -p 8081:8081 httpserv /bin/ash -c 'ls && yarn test'"
+    "docker-test": "docker run -p 8081:8081 httpserv /bin/ash -c 'yarn test'"
   },
   "dependencies": {
     "aws-sdk": "^2.795.0",

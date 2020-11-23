@@ -9,9 +9,10 @@ test:
     - apk add curl
     - apk add bash
     - apk add --update nodejs npm
+    - npm install -g yarn
   script:
     - cd ./vh4
-    - npm run test-httpserv
+    - yarn test-httpserv
 
 production:
   only:

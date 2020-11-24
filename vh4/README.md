@@ -339,6 +339,7 @@ However it leaves out two important details:
 3. On free tier you can have only one containers running on one instance, hence here we split httpserv and obse into one app and then orig and imed into one app
 4. In order for the entrypoint to work, you need to define it as service type web, and in the multi-container mode you need to name the Dockerfile as Dockerfile.web. In the beginning I was using Dockerfile.httpserv and then wondered why I was getting error `H14 error in heroku - “no web processes running”`, mind you, this same error happens also if you have no instances running as outlined in point 1
 
+Details on the process model [here](heroku container:push web -a devops-apigateway)
 
 ## Steps of deploying to Heroku container service for multiple images
 1. You need an app to run against `heroku create`
@@ -354,9 +355,8 @@ notice that the service managing HTTP calls needs to be called Dockerfile.web to
 - Since both httpserv and api service need to be online and heroku only allows one external connection per instance we'll deploy these on separate instances and they can communicate via http.
   - I could even just split each instance to their own dyno so we  can scale them independently. Either use heroku API or drop down to bash and use Heroku CLI https://devcenter.heroku.com/articles/platform-api-reference
 - Communication between API gateway and the rest of the services will be done via RabbitMQ
+- wanted to use Dockerfile.* type deploys with heroku container --recursive mode, but since we have to have two overlapping API services we can't do that, hence we need to cd to each subdir and do a normal deploy against a local Dockerfile
 - 
-
-
 # TODO
 - [ ] And hot code reloading to all scripts
 - [ ] Allow development without a Docker environment

@@ -13,6 +13,7 @@
     "release-imed": "heroku container:release imed -a devops-imed-orig",
     "release-orig": "heroku container:release orig -a devops-imed-orig",
     "test-httpserv": "cd ./src/httpserv && yarn build && yarn docker-test",
+    "test-apigateway": "cd ./src/apigateway && yarn build && yarn docker-test",
     "test-obse": "cd ./src/obse && yarn build && yarn docker-test",
     "test-orig": "cd ./src/orig && yarn build && yarn docker-test",
     "test-imed": "cd ./src/imed && yarn build && yarn docker-test"

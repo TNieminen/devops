@@ -13,6 +13,7 @@ test:
   script:
     - cd ./vh4
     - yarn test-httpserv
+    - yarn test-apigateway
     - yarn test-imed
     - yarn test-obse
     - yarn test-orig
@@ -29,11 +30,16 @@ production:
     - curl https://cli-assets.heroku.com/install.sh | sh
     - docker login --username=_ --password=$(heroku auth:token) registry.heroku.com
   script:
-    - cd ./vh4
-    - heroku container:push --recursive web obse -a devops-httpserv-obse
-    - heroku container:push --recursive imed orig -a devops-imed-orig
-    - heroku container:release web obse -a devops-httpserv-obse
-    - heroku container:release imed orig -a devops-imed-orig
+    - cd /vh4/src/httpserv && heroku container:push web -a devops-httpserv
+    - heroku container:release web -a devops-httpserv
+    - cd /vh4/src/apigateway && heroku container:push web -a devops-apigateway
+    - heroku container:release web -a devops-apigateway
+    - cd /vh4/src/obse && heroku container:push worker -a devops-obse
+    - heroku container:release worker -a devops-obse
+    - cd /vh4/src/imed && heroku container:push worker -a devops-imed
+    - heroku container:release worker -a devops-imed
+    - cd /vh4/src/orig && heroku container:push worker -a devops-orig
+    - heroku container:release worker -a devops-orig
 # # Gitlab to heroku using docker
 # We could use docker commands and curl Heroku's API as outlined here:
 # https://medium.com/@nieldw/use-gitlab-ci-to-deploy-docker-images-to-heroku-4e544a3a3c38

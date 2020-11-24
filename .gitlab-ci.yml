@@ -30,15 +30,15 @@ production:
     - curl https://cli-assets.heroku.com/install.sh | sh
     - docker login --username=_ --password=$(heroku auth:token) registry.heroku.com
   script:
-    - cd /vh4/src/httpserv && heroku container:push web -a devops-httpserv
+    - cd ./vh4/src/httpserv && heroku container:push web -a devops-httpserv
     - heroku container:release web -a devops-httpserv
-    - cd /vh4/src/apigateway && heroku container:push web -a devops-apigateway
+    - cd .. && cd ./apigateway && heroku container:push web -a devops-apigateway
     - heroku container:release web -a devops-apigateway
-    - cd /vh4/src/obse && heroku container:push worker -a devops-obse
+    - cd .. && cd ./obse && heroku container:push worker -a devops-obse
     - heroku container:release worker -a devops-obse
-    - cd /vh4/src/imed && heroku container:push worker -a devops-imed
+    - cd .. && cd ./imed && heroku container:push worker -a devops-imed
     - heroku container:release worker -a devops-imed
-    - cd /vh4/src/orig && heroku container:push worker -a devops-orig
+    - cd .. && cd ./orig && heroku container:push worker -a devops-orig
     - heroku container:release worker -a devops-orig
 # # Gitlab to heroku using docker
 # We could use docker commands and curl Heroku's API as outlined here:

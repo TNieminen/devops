@@ -7,7 +7,7 @@
     "docker-start": "docker run -p 8080:8080 httpserv",
     "build": "docker build -f Dockerfile --tag httpserv .",
     "test": "NODE_ENV=test nyc mocha",
-    "docker-test": "docker run -p 8080:8080 httpserv /bin/ash -c 'yarn test'"
+    "docker-test": "docker run httpserv /bin/ash -c 'yarn test'"
   },
   "dependencies": {
     "aws-sdk": "^2.795.0",

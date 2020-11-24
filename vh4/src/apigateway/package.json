@@ -7,7 +7,7 @@
     "docker-start": "docker run -p 8081:8081 apigateway",
     "build": "docker build -f Dockerfile --tag apigateway .",
     "test": "NODE_ENV=test nyc mocha",
-    "docker-test": "docker run -p 8081:8081 apigateway /bin/ash -c 'yarn test'"
+    "docker-test": "docker run apigateway /bin/ash -c 'yarn test'"
   },
   "dependencies": {
     "aws-sdk": "^2.795.0",

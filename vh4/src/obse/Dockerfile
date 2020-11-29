@@ -16,7 +16,6 @@ RUN yarn install --frozen-lockfile
 # chown moved packages, remember ./ is now at workdir root
 COPY --chown=node:node ./.env.defaults /home/node/app/
 COPY --chown=node:node ./index.js /home/node/app/
-COPY --chown=node:node ./s3.js /home/node/app/
 COPY --chown=node:node ./utils.js /home/node/app/
 COPY --chown=node:node ./.mocharc.js /home/node/app/
 COPY --chown=node:node ./test.js /home/node/app/

@@ -27,3 +27,11 @@ Example output:
 **GET /node-statistic (optional)**
 
 Return core statistics (the five (5) most important in your mind) of the RabbitMQ. (For getting the information see https://www.rabbitmq.com/monitoring.html)Output should syntactically correct and intuitive JSON. E.g:{ “fd_used”: 5, ...}GET /queue-statistic (optional)Return a JSON array per your queue. For each queue return “message delivery rate”, “messages publishing rate”, “messages delivered recently”, “message published lately”. (For gettingthe information see https://www.rabbitmq.com/monitoring.html)Modify the ORIG service to send messages forever untilpause pausedor stopped.Implement acopy of the OBSE process
+
+
+## NOTES
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams
+// response.body returns a readable stream
+// but we can use the text method to parse it
+// https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams

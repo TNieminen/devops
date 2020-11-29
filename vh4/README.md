@@ -356,7 +356,16 @@ notice that the service managing HTTP calls needs to be called Dockerfile.web to
   - I could even just split each instance to their own dyno so we  can scale them independently. Either use heroku API or drop down to bash and use Heroku CLI https://devcenter.heroku.com/articles/platform-api-reference
 - Communication between API gateway and the rest of the services will be done via RabbitMQ
 - wanted to use Dockerfile.* type deploys with heroku container --recursive mode, but since we have to have two overlapping API services we can't do that, hence we need to cd to each subdir and do a normal deploy against a local Dockerfile
-- 
+- Testing
+  - Split APi implementation into parts, similar to what you have in the Calculator repo
+  - Unit testing
+    - https://medium.com/@xoor/building-a-node-js-rest-api-8-unit-testing-822c32a587df
+    - https://sinonjs.org/how-to/stub-dependency/
+    - Use an interceptor for http calls https://www.npmjs.com/package/nock such as the fetch to httpserv
+    - https://sinonjs.org/releases/latest/mocks/
+    - https://medium.com/@oyetoketoby80/how-to-write-unit-test-for-your-rest-api-f8f71376273f
+    - It seems that what is seen as unit testing is really integration testing most of the time, maybe I could seek to do first unit tests for methods and then integration tests on top?
+  
 # TODO
 - [ ] And hot code reloading to all scripts
 - [ ] Allow development without a Docker environment

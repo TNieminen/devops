@@ -4,6 +4,7 @@ const express = require('express')
 const path = require('path')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
+const messagesController = require('./controllers/messages')
 const app = express()
 
 
@@ -13,8 +14,10 @@ app.use(express.urlencoded({extended: false}))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use('/', async(req,res) => {
-  res.sendStatus(200)
+
+app.get('/messages', async(req,res) => {
+  const response = await messagesController.getMessages()
+  res.status(200).send(response)
 })
 
 // catch 404 and forward to error handler

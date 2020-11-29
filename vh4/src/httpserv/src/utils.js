@@ -1,9 +1,7 @@
 const fs = require('fs')
 const path = require('path')
-const {getObjectPromise} = require('./s3')
+const {getObjectPromise} = require('@badgrhammer/s3-helpers')
 const {ENV,FILE_PATH, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_REGION} = process.env
-
-
 
 function readLocalFile() {
   return new Promise((resolve,reject) => {
@@ -24,12 +22,16 @@ function readS3File() {
     AWS_REGION
   },{
     Key:FILE_PATH
-  })
+  }).then(data => data.Body)
 }
 
-exports.readFile = () => {
+function readFile() {
   if (ENV !== 'production') {
     return readLocalFile()
   }
   return readS3File()
+}
+
+module.exports = {
+  readFile
 }

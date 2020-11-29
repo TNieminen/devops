@@ -4,7 +4,8 @@ const express = require('express')
 const path = require('path')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
-const {readFile} = require('./utils')
+
+const rootController = require('./controllers/root')
 const app = express()
 
 
@@ -16,14 +17,11 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/', async(req,res) => {
   try {
-    const data = await readFile()
+    const data = await rootController.getRoot()
     return res.status(200).send(data)
   }
   catch (err) {
-    if (err.code === 'ENOENT' || err.code === 'NoSuchKey') {
-      return res.status(404).send('Service is starting up, wait a moment')
-    }
-    return res.status(500).send(err.toString())
+    return res.status(err.status || 500).send(err.toString())
   }
 })
 

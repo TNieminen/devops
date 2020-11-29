@@ -63,7 +63,7 @@ exports.uploadPromise = ({AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, 
  * @description getObjectPromise downloads an s3 file into a buffer
  * @returns {Promise<getObjectResponse>}  Returns the response data object of s3.
  * */
-exports.getObjectPromise = ({AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_REGION}, s3Options) => {
+exports.getObjectPromise = async({AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_REGION}, s3Options) => {
   const s3 = new S3({
     params: {
       accessKeyId: AWS_ACCESS_KEY_ID,

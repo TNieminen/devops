@@ -3,7 +3,6 @@ const expect = require('expect')
 const fetch = require('node-fetch')
 const sinon = require('sinon')
 const messages = require('./index')
-const {HTTPSERV_URL} = process.env
 
 let stub
 

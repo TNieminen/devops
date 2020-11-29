@@ -182,6 +182,11 @@
   resolved "https://registry.yarnpkg.com/@badgrhammer/rabbitmq-helpers/-/rabbitmq-helpers-2.0.0.tgz#76a66be2f75be7db6764f3716bd97899a2da991d"
   integrity sha512-0Vc8rxxnAsdalJufAKUka6n8XlKBS6KwAAKL090o8F6O2taNu8M/cPrv1cIR2JsXx5f1nc92pQ5+UTPSNPiT0Q==
 
+"@badgrhammer/s3-helpers@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@badgrhammer/s3-helpers/-/s3-helpers-1.0.0.tgz#b67e007245bd2416cc9b57751466004f97adbcdd"
+  integrity sha512-AeeFoRjDTnqEY2xa0Yc5KALCmRGgEVr+RI7lNeHYyedoGpCFakw5+DSNx1jBEAWfSQ16fjtfov/bM6W6AMSIDA==
+
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz#fd3db1d59ecf7cf121e80650bb86712f9b55eced"

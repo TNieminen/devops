@@ -1,5 +1,5 @@
 const fs = require('fs')
-const {uploadObjectPromise, deleteObjectPromise, getObjectPromise} = require('./s3')
+const {uploadObjectPromise, deleteObjectPromise, getObjectPromise} = require('@badgrhammer/s3-helpers')
 const {ENV, FILE_PATH, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_REGION} = process.env
 
 

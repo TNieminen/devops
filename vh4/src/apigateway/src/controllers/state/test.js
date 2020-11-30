@@ -4,8 +4,12 @@ const state = require('./index')
 const queue = require('./queue')
 
 describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
+  afterEach(() => {
+    state.clearState()
+  })
+
   describe('==== PUT ====', () => {
-  
+
     it('Should PAUSE the service successfully', async() => {
       // insert response message to state
       const id = Date.now()
@@ -38,6 +42,19 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       // TODO: if we add timeout handling this is a good place to test it
       // we could add a TTL to messages, but that is out of the scope now
       // https://www.rabbitmq.com/ttl.html
+    })
+  })
+
+  describe('==== GET ====', () => {
+    it('Should return shutdown state if we have no state information set', async() => {
+      expect(state.getState()).toEqual('SHUTDOWN')
+    })
+    it('Should return new state after update', async() => {
+      // set state to running
+      queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING'})})
+      await state.changeState({id:1, payload:'RUNNING'})
+      // expect this to be reflected in local state
+      expect(state.getState()).toEqual('RUNNING')
     })
   })
   

@@ -7,8 +7,8 @@ const queryIntervalTime = ENV === 'test' ? 10 : 1000
 /**
  * @description sends a pause control command to the queue and awaits for the response
  */
-async function pauseService(id) {
-  await queue.sendMessage({id, payload:'PAUSE'})
+async function changeState({id, payload}) {
+  await queue.sendMessage({id, payload})
   return queryResponse(id)
 }
 
@@ -35,5 +35,5 @@ function queryResponse(id) {
 
 
 module.exports = {
-  pauseService
+  changeState
 }

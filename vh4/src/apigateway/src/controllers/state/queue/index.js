@@ -14,21 +14,24 @@ const producer = initExchangeProducer({
   exchange: EXCHANGE
 })
 
-const {channel:consumer, queue} = initExchangeConsumer({
+
+initExchangeConsumer({
   rabbitMq,
   connectionString,
   topic: 'my.control-response',
   exchange: EXCHANGE
+}).then(({channel:consumer, queue}) => {
+  consumer.consume(queue, (message) => {
+    if (message !== null) {
+      putMessage(message)
+      // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
+      // however for development simplicity we'll just save messages and acknowledge them immediately
+      consumer.ack(message)
+    }
+  })
+  
 })
 
-consumer.consume(queue, (message) => {
-  if (message !== null) {
-    putMessage(message)
-    // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
-    // however for development simplicity we'll just save messages and acknowledge them immediately
-    consumer.ack(message)
-  }
-})
 
 /**
  * @description a local store for received messages
@@ -55,9 +58,27 @@ function getMessageById(id) {
 /**
  * @description sends control message to queue service with id
  */
-async function sendMessage(message) {
+async function sendMessage({id, payload}) {
+  if (!id) {
+    throw new Error('Queue message has to have and id')
+  }
+  if (!message) {
+    throw new Error('Cannot send message without payload')
+  }
+  const message = JSON.stringify({id, payload})
+  publishMessage(message)
+}
+
+/**
+ * @private
+ * @description publishes a message to rabbitMQ, in tests env return
+ */
+async function publishMessage(message) {
+  if (ENV === 'test') {
+    return // mocking rabbitmq for testing purposes is not worth the effort at this time
+  }
   await producer // producer init is a promise, awaiting it returns the same object after first init
-  return producer.publish(EXCHANGE,'my.control-request', Buffer.from(message))
+  return producer.publish(EXCHANGE,'my.control-request', Buffer.from(message))  
 }
 
 

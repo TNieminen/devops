@@ -4,13 +4,34 @@ const state = require('./index')
 const queue = require('./queue')
 
 describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
-  describe('==== PUT Paused ====', () => {
+  describe('==== PUT ====', () => {
   
-    it('Should pause the service successfully', async() => {
+    it('Should PAUSE the service successfully', async() => {
       // insert response message to state
       const id = Date.now()
-      queue.putMessage({content:JSON.stringify({id, payload:'TEST'})})
-      await expect(state.pauseService(id)).resolves.toEqual('TEST')
+      queue.putMessage({content:JSON.stringify({id, payload:'PAUSE'})})
+      await expect(state.changeState({id, payload:'PAUSE'})).resolves.toEqual('PAUSE')
+    })
+
+    it('Should set the service to RUNNING successfully', async() => {
+      // insert response message to state
+      const id = Date.now()
+      queue.putMessage({content:JSON.stringify({id, payload:'RUNNING'})})
+      await expect(state.changeState({id, payload:'RUNNING'})).resolves.toEqual('RUNNING')
+    })
+
+    it('Should reject if payload is not defined', async() => {
+      // insert response message to state
+      const id = Date.now()
+      queue.putMessage({content:JSON.stringify({id, payload:'RUNNING'})})
+      await expect(state.changeState({id})).rejects
+    })
+
+    it('Should reject if id is not defined', async() => {
+      // insert response message to state
+      const id = Date.now()
+      queue.putMessage({content:JSON.stringify({id, payload:'RUNNING'})})
+      await expect(state.changeState({payload:'RUNNING'})).rejects
     })
 
     xit('Should reject because response was not received in time', async() => {

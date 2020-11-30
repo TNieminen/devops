@@ -1,29 +1,21 @@
 require('dotenv-defaults').config()
 const expect = require('expect')
-// const sinon = require('sinon')
 const state = require('./index')
-
-let stub
+const queue = require('./queue')
 
 describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
   describe('==== PUT Paused ====', () => {
-    beforeEach(() => {
-      // stub = sinon.stub(fetch, 'Promise')
-    })
-    afterEach(() => {
-      // stub.restore()
-    })
   
     it('Should pause the service successfully', async() => {
-      // // stub fetch response
-      // stub.returns(Promise.resolve({ok:true}))
-      await expect(state.pauseService()).resolves
+      // insert response message to state
+      const id = Date.now()
+      queue.putMessage({content:JSON.stringify({id:1, payload:'TEST'})})
+      await expect(state.pauseService(id)).resolves.toEqual('TEST')
     })
 
-    it('Should throw an error if the request fails', async() => {
-      // // stub fetch response
-      // stub.returns(Promise.resolve({ok:true}))
-      await expect(state.pauseService()).rejects
+    xit('Should throw an error if the request fails', async() => {
+      // executing this test requires figuring out how to mock request and response behaviour from rabbitmq
+      await expect(state.pauseService(id)).rejects
     })
 
     // TODO: we could add a TTL to messages, but that is out of the scope now

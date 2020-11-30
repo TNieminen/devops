@@ -5,11 +5,15 @@ const queue = require('./queue')
 const queryIntervalTime = ENV === 'test' ? 10 : 1000
 const defaultState = 'SHUTDOWN'
 let state = defaultState
+let log = ''
 
 /**
  * @description sends a pause control command to the queue and awaits for the response
  */
-async function changeState({id, payload}) {
+async function changeState({timestamp, id, payload}) {
+  if (!timestamp) {
+    throw new Error('Timestamp is required for state change')
+  }
   await queue.sendMessage({id, payload})
   return queryResponse(id)
 }
@@ -49,8 +53,24 @@ function clearState() {
   return state
 }
 
+/**
+ * @description clears local log
+ */
+function clearLog() {
+  log = ''
+}
+
+/**
+ * @description returns log string
+ */
+function getLog() {
+  return log
+}
+
 module.exports = {
   changeState,
   getState,
-  clearState
+  clearState,
+  clearLog,
+  getLog
 }

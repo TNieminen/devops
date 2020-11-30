@@ -28,15 +28,15 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
     })
 
     it('Should reject if payload is not defined', async() => {
-      await expect(state.changeState({id})).rejects
+      await expect(state.changeState({id:Date.now()})).rejects.toThrow()
     })
 
     it('Should reject if id is not defined', async() => {
-      await expect(state.changeState({payload:'RUNNING'})).rejects
+      await expect(state.changeState({payload:'RUNNING'})).rejects.toThrow()
     })
 
     it('Should reject if timestamp is not defined', async() => {
-      await expect(state.changeState({id, payload:'RUNNING'})).rejects
+      await expect(state.changeState({id:Date.now(), payload:'RUNNING'})).rejects.toThrow()
     })
 
     xit('Should reject because response was not received in time', async() => {
@@ -76,8 +76,8 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
         //
         expect(state.getLog()).toEqual(`${timestamp.toISOString()} RUNNING`)
       })
-      it('Should return undefined if no log exists', async() => {
-        expect(state.getLog()).toEqual(undefined)
+      it('Should return empty string if no log exists', async() => {
+        expect(state.getLog()).toEqual('')
       })
     })
     

@@ -37,11 +37,11 @@ describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
     })
 
     it('Should throw error if id is not defined', async() => {
-      await expect(queue.sendMessage({payload:'TEST'})).rejects
+      await expect(queue.sendMessage({payload:'TEST'})).rejects.toEqual(new Error('Queue message has to have and id'))
     })
 
     it('Should throw error if payload is not defined', async() => {
-      await expect(queue.sendMessage({id:1})).rejects
+      await expect(queue.sendMessage({id:1})).rejects.toEqual(new Error('Cannot send message without payload'))
     })
 
   })

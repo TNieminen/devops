@@ -40,6 +40,7 @@ const messages = {}
 
 /**
  * @description saves a message to local state
+ * @param {{content:'{id, payload}'}} msg
  */
 function putMessage(msg) {
   const message = JSON.parse(msg.content)
@@ -62,11 +63,11 @@ async function sendMessage({id, payload}) {
   if (!id) {
     throw new Error('Queue message has to have and id')
   }
-  if (!message) {
+  if (!payload) {
     throw new Error('Cannot send message without payload')
   }
   const message = JSON.stringify({id, payload})
-  publishMessage(message)
+  return publishMessage(message)
 }
 
 /**

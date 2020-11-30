@@ -3,6 +3,11 @@ const expect = require('expect')
 const queue = require('./index')
 
 describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
+
+  afterEach(() => {
+    queue.clearMessages()
+  })
+
   describe('==== QUEUE putMessage ====', () => {
 
     it('Should return messages object that contains our message', () => {
@@ -20,7 +25,7 @@ describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
   describe('==== QUEUE getMessageById ====', () => {
 
     it('Should return payload if id exists in messages', () => {
-      queue.messages = {1:'TEST'}
+      queue.messages[1] = 'TEST'
       expect(queue.getMessageById(1)).toEqual('TEST')
     })
 
@@ -44,6 +49,13 @@ describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
       await expect(queue.sendMessage({id:1})).rejects.toEqual(new Error('Cannot send message without payload'))
     })
 
+  })
+
+  describe('==== QUEUE clearMessages ====', () => {
+    it('Should clear all messages', () => {
+      queue.messages[1] = 'TEST'
+      expect(queue.clearMessages()).toEqual({})
+    })
   })
   
   

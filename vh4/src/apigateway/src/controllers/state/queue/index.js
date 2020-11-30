@@ -82,10 +82,15 @@ async function publishMessage(message) {
   return producer.publish(EXCHANGE,'my.control-request', Buffer.from(message))  
 }
 
+function clearMessages() {
+  Object.keys(messages).forEach(key => delete messages[`${key}`])
+  return messages
+}
 
 module.exports = {
   putMessage,
   getMessageById,
   sendMessage,
-  messages
+  messages,
+  clearMessages
 }

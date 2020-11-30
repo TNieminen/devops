@@ -16,5 +16,19 @@ describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
     })
 
   })
+
+  describe('==== QUEUE getMessageById ====', () => {
+
+    it('Should return payload if id exists in messages', () => {
+      queue.messages = {1:'TEST'}
+      expect(queue.getMessageById(1)).toEqual('TEST')
+    })
+
+    it('Should return undefined if message with id does not exist', () => {
+      expect(queue.getMessageById(2)).toEqual(undefined)
+    })
+
+  })
+  
   
 })

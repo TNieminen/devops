@@ -29,6 +29,22 @@ describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
     })
 
   })
+
+  describe('==== QUEUE sendMessage ====', () => {
+
+    it('Should send message successfully', async() => {
+      await expect(queue.sendMessage({id:1, payload:'TEST'})).resolves
+    })
+
+    it('Should throw error if id is not defined', async() => {
+      await expect(queue.sendMessage({payload:'TEST'})).rejects
+    })
+
+    it('Should throw error if payload is not defined', async() => {
+      await expect(queue.sendMessage({id:1})).rejects
+    })
+
+  })
   
   
 })

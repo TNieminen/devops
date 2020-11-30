@@ -9,21 +9,15 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
     it('Should pause the service successfully', async() => {
       // insert response message to state
       const id = Date.now()
-      queue.putMessage({content:JSON.stringify({id:1, payload:'TEST'})})
+      queue.putMessage({content:JSON.stringify({id, payload:'TEST'})})
       await expect(state.pauseService(id)).resolves.toEqual('TEST')
     })
 
-    xit('Should throw an error if the request fails', async() => {
-      // executing this test requires figuring out how to mock request and response behaviour from rabbitmq
-      await expect(state.pauseService(id)).rejects
+    xit('Should reject because response was not received in time', async() => {
+      // TODO: if we add timeout handling this is a good place to test it
+      // we could add a TTL to messages, but that is out of the scope now
+      // https://www.rabbitmq.com/ttl.html
     })
-
-    // TODO: we could add a TTL to messages, but that is out of the scope now
-    // https://www.rabbitmq.com/ttl.html
-    // it('Should throw an error if the request times out', async() => {
-    //   await expect(state.pauseService()).rejects
-    // })
-
   })
   
 })

@@ -1,5 +1,4 @@
 async function checkStatus(res) {
-  console.log(res.status)
   if (res.ok) { // res.status >= 200 && res.status < 300
     return res
   } else {

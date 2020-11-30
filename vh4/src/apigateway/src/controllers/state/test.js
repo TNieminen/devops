@@ -6,6 +6,7 @@ const queue = require('./queue')
 describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
   afterEach(() => {
     state.clearState()
+    state.clearLog()
   })
 
   describe('==== PUT ====', () => {
@@ -14,28 +15,28 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       // insert response message to state
       const id = Date.now()
       queue.putMessage({content:JSON.stringify({id, payload:'PAUSE'})})
-      await expect(state.changeState({id, payload:'PAUSE'})).resolves.toEqual('PAUSE')
+      const timestamp = new Date()
+      await expect(state.changeState({timestamp, id, payload:'PAUSE'})).resolves.toEqual('PAUSE')
     })
 
     it('Should set the service to RUNNING successfully', async() => {
       // insert response message to state
       const id = Date.now()
+      const timestamp = new Date()
       queue.putMessage({content:JSON.stringify({id, payload:'RUNNING'})})
-      await expect(state.changeState({id, payload:'RUNNING'})).resolves.toEqual('RUNNING')
+      await expect(state.changeState({timestamp, id, payload:'RUNNING'})).resolves.toEqual('RUNNING')
     })
 
     it('Should reject if payload is not defined', async() => {
-      // insert response message to state
-      const id = Date.now()
-      queue.putMessage({content:JSON.stringify({id, payload:'RUNNING'})})
       await expect(state.changeState({id})).rejects
     })
 
     it('Should reject if id is not defined', async() => {
-      // insert response message to state
-      const id = Date.now()
-      queue.putMessage({content:JSON.stringify({id, payload:'RUNNING'})})
       await expect(state.changeState({payload:'RUNNING'})).rejects
+    })
+
+    it('Should reject if timestamp is not defined', async() => {
+      await expect(state.changeState({id, payload:'RUNNING'})).rejects
     })
 
     xit('Should reject because response was not received in time', async() => {
@@ -46,16 +47,40 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
   })
 
   describe('==== GET ====', () => {
-    it('Should return shutdown state if we have no state information set', async() => {
-      expect(state.getState()).toEqual('SHUTDOWN')
+
+    afterEach(() => {
+      state.clearState()
+      state.clearLog()
     })
-    it('Should return new state after update', async() => {
-      // set state to running
-      queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING'})})
-      await state.changeState({id:1, payload:'RUNNING'})
-      // expect this to be reflected in local state
-      expect(state.getState()).toEqual('RUNNING')
+
+    describe('/state', () => {
+      it('Should return shutdown state if we have no state information set', async() => {
+        expect(state.getState()).toEqual('SHUTDOWN')
+      })
+      it('Should return new state after update', async() => {
+        // set state to running
+        queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING'})})
+        const timestamp = new Date()
+        await state.changeState({timestamp, id:1, payload:'RUNNING'})
+        // expect this to be reflected in local state
+        expect(state.getState()).toEqual('RUNNING')
+      })  
     })
+
+    describe('/run-log', () => {
+      it('Should return a log when it exists', async() => {
+        // set state to running
+        queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING'})})
+        const timestamp = new Date()
+        await state.changeState({timestamp, id:1, payload:'RUNNING'})
+        //
+        expect(state.getLog()).toEqual(`${timestamp.toISOString()} RUNNING`)
+      })
+      it('Should return undefined if no log exists', async() => {
+        expect(state.getLog()).toEqual(undefined)
+      })
+    })
+    
   })
   
 })

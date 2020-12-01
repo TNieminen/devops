@@ -26,7 +26,7 @@ function queryResponse(id) {
         if (response) {
           clearInterval(queryInterval)
           state = response.payload
-          log += `${response}\n`
+          log += `${new Date(response.timestamp).toISOString()} ${response.payload}\n`
           resolve(response)
         }
       }

@@ -2,7 +2,7 @@
   "name": "@badgrhammer/rabbitmq-helpers",
   "version": "3.0.1",
   "description": "helper functions for rabbitmq operations",
-  "main": "index.js",
+  "main": "./src/index.js",
   "scripts": {
     "test": "ENV=test nyc mocha"
   },

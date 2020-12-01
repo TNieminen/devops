@@ -5,33 +5,110 @@ const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, 
 
 const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
-const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
+const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}?heartbeat=5` 
 
+console.log('====================')
+console.log(connectionString)
+console.log('====================')
 
-const producer = initExchangeProducer({
-  rabbitMq,
-  connectionString,
-  exchange: EXCHANGE
-})
-
-
-initExchangeConsumer({
-  rabbitMq,
-  connectionString,
-  topic: 'my.control-response',
-  exchange: EXCHANGE
-}).then(({channel:consumer, queue}) => {
-  consumer.consume(queue, (message) => {
-    if (message !== null) {
-      putMessage(message)
-      // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
-      // however for development simplicity we'll just save messages and acknowledge them immediately
-      consumer.ack(message)
+class Queue {
+  constructor() {
+    this.initProducer()
+    this.initConsumer()
+    this.isProducerErrorState = false
+    this.isConsumerErrorState = false
+  }
+  async initProducer() {
+    try {
+      this.producer = await initExchangeProducer({
+        rabbitMq,
+        connectionString,
+        exchange: EXCHANGE
+      })
+      this.isProducerErrorState = false
+      this.producer.on('close',(err) => {
+        console.warn('Queue Producer:', err)
+        this.isProducerErrorState = true
+        this.initProducer()
+      })
     }
-  })
-  
-})
+    catch (err) {
+      console.warn('Queue Producer:', err)
+      this.isProducerErrorState = true
+      setTimeout(() => this.initProducer(),1000)
+    }
+  }
 
+  async initConsumer() {
+    try {
+      const {channel, queue} = await initExchangeConsumer({
+        rabbitMq,
+        connectionString,
+        topic: 'my.control-response',
+        exchange: EXCHANGE
+      })
+      this.consumer = channel
+      this.consumer.consume(queue, (message) => {
+        if (message !== null) {
+          putMessage(message)
+          // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
+          // however for development simplicity we'll just save messages and acknowledge them immediately
+          consumer.ack(message)
+        }
+      })
+      this.isConsumerErrorState = false
+      this.consumer.on('close',(err) => {
+        console.warn('Queue Consumer:', err)
+        this.isConsumerErrorState = true
+        this.initConsumer()
+      })
+    }
+    catch (err) {
+      console.warn('Queue Consumer:', err)
+      this.isConsumerErrorState = true
+      setTimeout(() => this.initConsumer(),1000)
+    }
+    
+  }
+
+  /**
+   * @description amqplib does not handle reconnections well and
+   * it is likely that if rabbitmq hasn't been running we willl experience
+   * ECONNRESET or Socket closed abruptly during opening handshake errors.
+   * In order to prevent messages from being lost, we can wait in a loop until
+   * the problem resolves. This can effectively be an infinite loop, so a more elegant
+   * solution would be to either time the Docker setup or alternatively maybe just enforce
+   * absolute amount of tries before failing the request
+   */
+  waitForProducerResolved() {
+    return new Promise((resolve,reject) => {
+      setInterval(() => {
+        if (!this.isProducerErrorState) {
+          resolve()
+        }
+      },1000)
+    })
+  }
+
+  waitForConsumerResolved() {
+    return new Promise((resolve,reject) => {
+      setInterval(() => {
+        if (!this.isConsumerErrorState) {
+          resolve()
+        }
+      },1000)
+    })
+  }
+
+  async publishMessage(message) {
+    if (this.isProducerErrorState) {
+      await this.waitForProducerResolved()
+    }
+    return this.producer.publish(EXCHANGE,'my.control-request', Buffer.from(message))  
+  }
+}
+
+const queue = new Queue()
 
 /**
  * @description a local store for received messages
@@ -81,8 +158,7 @@ async function publishMessage(message) {
   if (ENV === 'test') {
     return // mocking rabbitmq for testing purposes is not worth the effort at this time
   }
-  await producer // producer init is a promise, awaiting it returns the same object after first init
-  return producer.publish(EXCHANGE,'my.control-request', Buffer.from(message))  
+  return queue.publishMessage(message)
 }
 
 function clearMessages() {

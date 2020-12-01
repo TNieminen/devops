@@ -11,6 +11,7 @@ let log = ''
  * @description sends a pause control command to the queue and awaits for the response
  */
 async function changeState({timestamp, id, payload}) {
+  console.log('Sending message', {timestamp, id, payload})
   await queue.sendMessage({timestamp, id, payload})
   return queryResponse(id)
 }
@@ -21,6 +22,7 @@ async function changeState({timestamp, id, payload}) {
 function queryResponse(id) {
   return new Promise((resolve,reject) => {
     const queryInterval = setInterval(() => {
+      console.log('Querying response to', id)
       try {
         const response = queue.getMessageById(id) 
         if (response) {

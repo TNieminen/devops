@@ -31,6 +31,28 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
+    it('Should set the service to SHUTDOWN successfully', async() => {
+      // insert response message to state
+      const id = Date.now()
+      const timestamp = Date.now()
+      const payload = 'SHUTDOWN'
+      const message = {id, payload, timestamp}
+      // in shutdown mode we do not call external services, but rather scale them down
+      // hence we do not need to insert a response message
+      await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
+    })
+
+    it('Should set the service to INIT successfully', async() => {
+      // insert response message to state
+      const id = Date.now()
+      const timestamp = Date.now()
+      const payload = 'INIT'
+      const message = {id, payload, timestamp}
+      // in init mode we do not call external services, but rather scale them up
+      // hence we do not need to insert a response message
+      await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
+    })
+
     it('Should reject if payload is not defined', async() => {
       await expect(state.changeState({id:Date.now()})).rejects.toThrow()
     })

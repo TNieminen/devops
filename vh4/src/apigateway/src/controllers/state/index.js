@@ -11,10 +11,7 @@ let log = ''
  * @description sends a pause control command to the queue and awaits for the response
  */
 async function changeState({timestamp, id, payload}) {
-  if (!timestamp) {
-    throw new Error('Timestamp is required for state change')
-  }
-  await queue.sendMessage({id, payload})
+  await queue.sendMessage({timestamp, id, payload})
   return queryResponse(id)
 }
 
@@ -28,7 +25,8 @@ function queryResponse(id) {
         const response = queue.getMessageById(id) 
         if (response) {
           clearInterval(queryInterval)
-          state = response
+          state = response.payload
+          log += `${response}\n`
           resolve(response)
         }
       }

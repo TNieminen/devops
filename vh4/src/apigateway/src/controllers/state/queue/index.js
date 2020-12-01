@@ -49,7 +49,7 @@ class Queue {
       })
     }
     catch (err) {
-      console.warn('Queue Consumer:', err)
+      console.warn('Queue FanoutConsumer:', err)
       this.isFanoutConsumerErrorState = true
       setTimeout(() => this.initFanoutConsumer(),1000)
     }
@@ -122,7 +122,7 @@ class Queue {
       })
     }
     catch (err) {
-      console.warn('Queue Consumer:', err)
+      console.warn('Queue TopicConsumer:', err)
       this.isTopicConsumerErrorState = true
       setTimeout(() => this.initTopicConsumer(),1000)
     }

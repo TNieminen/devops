@@ -19,11 +19,20 @@ function stopService() {
 /**
  * @description sends a pause control command to the queue and awaits for the response
  */
-async function changeState({timestamp, id, payload, type}) {
+async function changeState({timestamp, id, payload}) {
   // console.log('Sending message', {timestamp, id, payload})
   // if the previous state equals to new state, we return early
-  if (!state === payload) {
+  if (state === payload) {
     return {timestamp,payload}
+  }
+  let type
+  if (payload === 'SHUTDOWN' || payload === 'INIT') {
+    // Shutdown and init messages are sent to all services
+    type = 'fanout'
+  }
+  else {
+    // Other messages are send in the topic queue and received only by orig
+    type = 'topic'
   }
   await queue.sendMessage({timestamp, id, payload, type})
   const response = await queryResponse(id)

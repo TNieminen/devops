@@ -40,12 +40,12 @@ const messages = {}
 
 /**
  * @description saves a message to local state
- * @param {{content:'{id, payload}'}} msg
+ * @param {{content:'{id, payload, timestamp}'}} msg
  */
 function putMessage(msg) {
   const message = JSON.parse(msg.content)
-  const {id, payload} = message
-  messages[`${id}`] = payload
+  const {id, payload, timestamp} = message
+  messages[`${id}`] = {payload, timestamp}
   return messages
 }
 
@@ -59,14 +59,20 @@ function getMessageById(id) {
 /**
  * @description sends control message to queue service with id
  */
-async function sendMessage({id, payload}) {
+async function sendMessage({timestamp, id, payload}) {
   if (!id) {
     throw new Error('Queue message has to have and id')
   }
   if (!payload) {
     throw new Error('Cannot send message without payload')
   }
-  const message = JSON.stringify({id, payload})
+  if (!timestamp) {
+    throw new Error('Cannot send message without timestamp')
+  }
+  if (!(timestamp instanceof Date)) {
+    throw new Error('Timestamp needs to be a valid date object')
+  }
+  const message = JSON.stringify({id, payload, timestamp})
   return publishMessage(message)
 }
 

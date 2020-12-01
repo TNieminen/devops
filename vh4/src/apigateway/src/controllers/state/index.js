@@ -1,5 +1,76 @@
-const {ENV} = process.env
-const queue = require('./queue')
+require('dotenv-defaults').config()
+const  Queue = require('@badgrhammer/rabbitmq-helpers')
+const {parse} = require('dotenv-defaults')
+const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV, LOGLEVEL} = process.env
+
+const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
+const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
+const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}?heartbeat=5`
+    
+const rabbitConfig = {
+  RABBIT_SERVER_URL, 
+  RABBIT_SERVER_PORT,
+  RABBIT_USERNAME,
+  RABBIT_PASSWORD, 
+  EXCHANGE,
+  CONNECTION_STRING:connectionString
+}
+
+let queue
+// Not an elegant way to mock queue, but I couldn't find a good way to sinon mock a class constructor
+// TODO: mock class constructor or find another solution that does not pollute production code
+if (ENV === 'test') {
+  queue = {
+    messages:{},
+    publishTopicMessage({message}) {
+      // in reality storing of this message would happen from 
+      // a response from an external service, for mocking purposes store original message
+      const {id, payload, timestamp} = JSON.parse(message)
+      this.messages[id] = {payload,timestamp}
+    },
+    publishFanoutMessage({message}) {
+      // in reality storing of this message would happen from 
+      // a response from an external service, for mocking purposes store original message
+      const {id, payload, timestamp} = JSON.parse(message)
+      this.messages[id] = {payload,timestamp}
+    },
+    getMessageById(id) {
+      return this.messages[id]
+    }
+  }
+}
+else {
+  queue = new Queue({rabbitConfig, topicConsumer:{topic:'control-response'}, topicProducer:true, fanoutConsumer:true, fanoutProducer:true})
+}
+
+
+/**
+ * @description sends control message to queue service with id
+ * - if type is set to fanout messages are delivered to all services
+ * - if type is set to topic, only services subscribed to that topic receive the message
+ */
+async function sendMessage({timestamp, id, payload, type}) {
+  if (!id) {
+    throw new Error('Queue message has to have and id')
+  }
+  if (!payload) {
+    throw new Error('Cannot send message without payload')
+  }
+  if (!timestamp || !Number.isInteger(timestamp)) {
+    throw new Error('Cannot send message without valid timestamp')
+  }
+  if (type !== 'fanout' && type !== 'topic') {
+    throw new Error('Message type needs to either topic or fanout')
+  }
+  const message = JSON.stringify({id, payload, timestamp})
+  if (type === 'topic') {
+    const topic = 'my.control-request'
+    return queue.publishTopicMessage({message, topic})
+  }
+  return queue.publishFanoutMessage({message})  
+  
+}
+
 
 // make queryinterval run faster in test env
 const queryIntervalTime = ENV === 'test' ? 10 : 1000
@@ -8,12 +79,21 @@ let state = defaultState
 let log = ''
 
 
-function initService() {
+async function initService() {
+  // on dev there is no need to actually scale containers
+  // sending the INIT message will make the services act in INIT & RUNNING mode
+  if (ENV !== 'production') {
+    return
+  }
   
 }
 
-function stopService() {
-  
+async function stopService() {
+  // on dev there is no need to actually scale containers
+  // sending stop as a queue message will simulate startup equal to container start
+  if (ENV !== 'production') {
+    return
+  }
 }
 
 /**
@@ -34,20 +114,12 @@ async function changeState({timestamp, id, payload}) {
     // Other messages are send in the topic queue and received only by orig
     type = 'topic'
   }
-  await queue.sendMessage({timestamp, id, payload, type})
+  await sendMessage({timestamp, id, payload, type})
   const response = await queryResponse(id)
-  /**
-   * In dev mode there is no easy way to scale other containers down
-   * because apigateway is running in it's own docker environment
-   * hence in dev mode we simulate init and shutdown behaviour via message service. 
-   * This will also happen in production, but in addition to this we actually scale the services down or up.
-   * Added benefit to this is that we can have a controlled shutdown behaviour which should prevent
-   * potential data loss.
-   */
-  if (payload === 'INIT' && ENV === 'production') {
+  if (payload === 'INIT') {
     await initService()
   }
-  if (payload === 'SHUTDOWN' && ENV === 'production') {
+  if (payload === 'SHUTDOWN') {
     await stopService()
   }
   return response  
@@ -109,5 +181,7 @@ module.exports = {
   getState,
   clearState,
   clearLog,
-  getLog
+  getLog,
+  sendMessage,
+  queryResponse
 }

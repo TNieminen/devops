@@ -244,10 +244,10 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@badgrhammer/rabbitmq-helpers@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@badgrhammer/rabbitmq-helpers/-/rabbitmq-helpers-3.0.0.tgz#ff77b6a49122c416c28764c4f3b5640b6223eba6"
-  integrity sha512-O92u79BSgeQtkOAlSIo3yBotQUkLmx7MWV/CHUo+kBnJCC1HnVL5zE6tlFeYGtreqAKGsSIKMzDAlCmazSA7+g==
+"@badgrhammer/rabbitmq-helpers@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@badgrhammer/rabbitmq-helpers/-/rabbitmq-helpers-3.0.1.tgz#471a8f8e1688df4f7d66a6f091e3923840220487"
+  integrity sha512-5tWt5gtzkLUt8jw88gHygKrsPthIahcZKZn3/BnrD8UGG0x+F4xKQIK4JaoOcDoqUm2RLpsXH+IAyePM7EJT5A==
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"

@@ -16,7 +16,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const id = Date.now()
       const timestamp = Date.now()
       const payload = 'PAUSE'
-      const message = {id, payload, timestamp}
+      const message = {id, payload, timestamp, type:'topic'}
       queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
@@ -26,7 +26,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const id = Date.now()
       const timestamp = Date.now()
       const payload = 'RUNNING'
-      const message = {id, payload, timestamp}
+      const message = {id, payload, timestamp, type:'topic'}
       queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
@@ -36,7 +36,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const id = Date.now()
       const timestamp = Date.now()
       const payload = 'SHUTDOWN'
-      const message = {id, payload, timestamp}
+      const message = {id, payload, timestamp, type:'fanout'}
       queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
@@ -46,7 +46,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const id = Date.now()
       const timestamp = Date.now()
       const payload = 'INIT'
-      const message = {id, payload, timestamp}
+      const message = {id, payload, timestamp, type:'fanout'}
       queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
@@ -85,7 +85,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
         // set state to running
         const timestamp = Date.now()
         queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING', timestamp})})
-        await state.changeState({timestamp, id:1, payload:'RUNNING'})
+        await state.changeState({timestamp, id:1, payload:'RUNNING', type:'topic'})
         // expect this to be reflected in local state
         expect(state.getState()).toEqual('RUNNING')
       })  
@@ -96,12 +96,12 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
         // set state to running
         const timestamp = Date.now()
         queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING', timestamp})})
-        await state.changeState({timestamp, id:1, payload:'RUNNING'})
+        await state.changeState({timestamp, id:1, payload:'RUNNING', type:'topic'})
         expect(state.getLog()).toEqual(`${new Date(timestamp).toISOString()} RUNNING\n`)
       })
       it('Should append to, not replace, old log', async() => {
-        const firstChange = {timestamp:Date.now(), id:1, payload:'RUNNING'}
-        const secondChange = {timestamp:Date.now(), id:2, payload:'PAUSED'}
+        const firstChange = {timestamp:Date.now(), id:1, payload:'RUNNING', type:'topic'}
+        const secondChange = {timestamp:Date.now(), id:2, payload:'PAUSED', type:'topic'}
         queue.putMessage({content:JSON.stringify(firstChange)})
         await state.changeState(firstChange)
         queue.putMessage({content:JSON.stringify(secondChange)})

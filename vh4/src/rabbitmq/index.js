@@ -51,8 +51,8 @@ exports.initFanoutProducer = async({rabbitMq, connectionString = '', exchange = 
  * Syntax for connectionString: `amqp://${userName}:${password}@${serverUrl}:${serverPort}`.
  * In some services serverPort is not needed.
  */
-exports.initFanoutConsumer = async({rabbitMq, connectionString = '', exchange = '', topic = ''}) => {
-  const channel = await createRabbitConnection({rabbitMq, connectionString, exchange, type:'topic'})
+exports.initFanoutConsumer = async({rabbitMq, connectionString = '', exchange = ''}) => {
+  const channel = await createRabbitConnection({rabbitMq, connectionString, exchange, type:'fanout'})
   // empty string so we can assign a random queue automatically
   const q = await channel.assertQueue('', {exclusive: true})
   // we leave the last option of topic empty so we can broadcast to all queues

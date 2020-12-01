@@ -11,8 +11,8 @@ describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
   describe('==== QUEUE putMessage ====', () => {
 
     it('Should return messages object that contains our message', () => {
-      const message = '{"id":1, "payload":"TEST"}'
-      expect(queue.putMessage({content:message})).toMatchObject({1:'TEST'})
+      const message = '{"id":1, "payload":"TEST", "timestamp":1}'
+      expect(queue.putMessage({content:message})).toMatchObject({1:{payload:'TEST', timestamp:1}})
     })
 
     it('Should throw an error if message cannot be parsed', () => {
@@ -38,16 +38,34 @@ describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
   describe('==== QUEUE sendMessage ====', () => {
 
     it('Should send message successfully', async() => {
-      await expect(queue.sendMessage({id:1, payload:'TEST'})).resolves
+      const timestamp = new Date()
+      const message = {id:1, payload:'TEST', timestamp}
+      await expect(await queue.sendMessage(message)).resolves
     })
 
     it('Should throw error if id is not defined', async() => {
-      await expect(queue.sendMessage({payload:'TEST'})).rejects.toEqual(new Error('Queue message has to have and id'))
+      const timestamp = new Date()
+      const message = {payload:'TEST', timestamp}
+      await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Queue message has to have and id'))
     })
 
     it('Should throw error if payload is not defined', async() => {
-      await expect(queue.sendMessage({id:1})).rejects.toEqual(new Error('Cannot send message without payload'))
+      const timestamp = new Date()
+      const message = {id:1, timestamp}
+      await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Cannot send message without payload'))
     })
+
+    it('Should throw error if timestamp is not defined', async() => {
+      const message = {id:1, payload:'TEST'}
+      await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Cannot send message without timestamp'))
+    })
+
+    it('Should throw error if timestamp is not a valid date object', async() => {
+      const message = {id:1, payload:'TEST', timestamp: Date.now()}
+      await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Timestamp needs to be a valid date object'))
+    })
+
+
 
   })
 

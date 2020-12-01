@@ -74,11 +74,21 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
     describe('/run-log', () => {
       it('Should return a log when it exists', async() => {
         // set state to running
-        queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING'})})
         const timestamp = Date.now()
+        queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING', timestamp})})
         await state.changeState({timestamp, id:1, payload:'RUNNING'})
-        //
-        expect(state.getLog()).toEqual(`${timestamp.toISOString()} RUNNING`)
+        expect(state.getLog()).toEqual(`${new Date(timestamp).toISOString()} RUNNING\n`)
+      })
+      it('Should append to, not replace, old log', async() => {
+        const firstChange = {timestamp:Date.now(), id:1, payload:'RUNNING'}
+        const secondChange = {timestamp:Date.now(), id:2, payload:'PAUSED'}
+        queue.putMessage({content:JSON.stringify(firstChange)})
+        await state.changeState(firstChange)
+        queue.putMessage({content:JSON.stringify(secondChange)})
+        await state.changeState(secondChange)
+        const firstLog = `${new Date(firstChange.timestamp).toISOString()} ${firstChange.payload}\n`
+        const secondLog = `${new Date(secondChange.timestamp).toISOString()} ${secondChange.payload}\n`
+        expect(state.getLog()).toEqual(firstLog + secondLog)
       })
       it('Should return empty string if no log exists', async() => {
         expect(state.getLog()).toEqual('')

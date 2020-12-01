@@ -19,13 +19,13 @@ function stopService() {
 /**
  * @description sends a pause control command to the queue and awaits for the response
  */
-async function changeState({timestamp, id, payload}) {
-  console.log('Sending message', {timestamp, id, payload})
+async function changeState({timestamp, id, payload, type}) {
+  // console.log('Sending message', {timestamp, id, payload})
   // if the previous state equals to new state, we return early
   if (!state === payload) {
     return {timestamp,payload}
   }
-  await queue.sendMessage({timestamp, id, payload})
+  await queue.sendMessage({timestamp, id, payload, type})
   const response = await queryResponse(id)
   /**
    * In dev mode there is no easy way to scale other containers down
@@ -50,7 +50,7 @@ async function changeState({timestamp, id, payload}) {
 function queryResponse(id) {
   return new Promise((resolve,reject) => {
     const queryInterval = setInterval(() => {
-      console.log('Querying response to', id)
+      // console.log('Querying response to', id)
       try {
         const response = queue.getMessageById(id) 
         if (response) {

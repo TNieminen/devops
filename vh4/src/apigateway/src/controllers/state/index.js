@@ -7,13 +7,41 @@ const defaultState = 'SHUTDOWN'
 let state = defaultState
 let log = ''
 
+
+function initService() {
+  
+}
+
+function stopService() {
+  
+}
+
 /**
  * @description sends a pause control command to the queue and awaits for the response
  */
 async function changeState({timestamp, id, payload}) {
   console.log('Sending message', {timestamp, id, payload})
+  // if the previous state equals to new state, we return early
+  if (!state === payload) {
+    return {timestamp,payload}
+  }
   await queue.sendMessage({timestamp, id, payload})
-  return queryResponse(id)
+  const response = await queryResponse(id)
+  /**
+   * In dev mode there is no easy way to scale other containers down
+   * because apigateway is running in it's own docker environment
+   * hence in dev mode we simulate init and shutdown behaviour via message service. 
+   * This will also happen in production, but in addition to this we actually scale the services down or up.
+   * Added benefit to this is that we can have a controlled shutdown behaviour which should prevent
+   * potential data loss.
+   */
+  if (payload === 'INIT' && ENV === 'production') {
+    await initService()
+  }
+  if (payload === 'SHUTDOWN' && ENV === 'production') {
+    await stopService()
+  }
+  return response  
 }
 
 /**

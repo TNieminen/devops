@@ -37,8 +37,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'SHUTDOWN'
       const message = {id, payload, timestamp}
-      // in shutdown mode we do not call external services, but rather scale them down
-      // hence we do not need to insert a response message
+      queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -48,8 +47,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'INIT'
       const message = {id, payload, timestamp}
-      // in init mode we do not call external services, but rather scale them up
-      // hence we do not need to insert a response message
+      queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 

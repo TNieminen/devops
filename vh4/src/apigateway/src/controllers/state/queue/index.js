@@ -66,11 +66,8 @@ async function sendMessage({timestamp, id, payload}) {
   if (!payload) {
     throw new Error('Cannot send message without payload')
   }
-  if (!timestamp) {
-    throw new Error('Cannot send message without timestamp')
-  }
-  if (!(timestamp instanceof Date)) {
-    throw new Error('Timestamp needs to be a valid date object')
+  if (!timestamp || !Number.isInteger(timestamp)) {
+    throw new Error('Cannot send message without valid timestamp')
   }
   const message = JSON.stringify({id, payload, timestamp})
   return publishMessage(message)

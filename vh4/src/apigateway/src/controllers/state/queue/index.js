@@ -7,14 +7,12 @@ const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}?heartbeat=5` 
 
-console.log('====================')
-console.log(connectionString)
-console.log('====================')
-
 class Queue {
   constructor() {
-    this.initProducer()
-    this.initConsumer()
+    if (ENV !== 'test') {
+      this.initProducer()
+      this.initConsumer()  
+    }
     this.isProducerErrorState = false
     this.isConsumerErrorState = false
   }

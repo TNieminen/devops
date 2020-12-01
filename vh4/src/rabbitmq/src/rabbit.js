@@ -60,6 +60,19 @@ const initFanoutConsumer = async({rabbitMq, connectionString = '', exchange = ''
   return {channel, queue:q.queue}
 }
 
+// ```js
+// // initialize what exchange we are part of
+// channel.assertExchange('name-of-exchange', 'fanout', {
+//   durable: false
+// });
+
+// // if you leave the queue name empty, the server generates one on random
+// // setting exclusive = true scopes the queue to the connection
+// channel.assertQueue('', { exclusive: true }, (err, q) => {
+//   // we leave the last value empty so that we will receive all the messages
+//   channel.bindQueue(q.queue, 'name-of-exchange', '');
+// })
+
 
 module.exports = {
   initTopicProducer,

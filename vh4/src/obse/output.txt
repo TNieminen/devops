@@ -1,0 +1,18 @@
+2020-12-01T15:24:38.884Z Topic my.i: Got message MSG_1
+2020-12-01T15:24:40.873Z Topic my.o: MSG_2
+2020-12-01T15:24:41.880Z Topic my.i: Got message MSG_2
+2020-12-01T15:24:43.880Z Topic my.o: MSG_3
+2020-12-01T15:24:44.884Z Topic my.i: Got message MSG_3
+2020-12-01T15:24:46.881Z Topic my.o: MSG_1
+2020-12-01T15:24:47.883Z Topic my.i: Got message MSG_1
+2020-12-01T15:24:49.880Z Topic my.o: MSG_2
+2020-12-01T15:24:50.884Z Topic my.i: Got message MSG_2
+2020-12-01T15:24:52.884Z Topic my.o: MSG_3
+2020-12-01T15:24:53.891Z Topic my.i: Got message MSG_3
+2020-12-01T15:25:08.354Z Topic my.o: MSG_1
+2020-12-01T15:25:09.359Z Topic my.i: Got message MSG_1
+2020-12-01T15:25:11.353Z Topic my.o: MSG_2
+2020-12-01T15:25:12.357Z Topic my.i: Got message MSG_2
+2020-12-01T15:25:14.359Z Topic my.o: MSG_3
+2020-12-01T15:25:15.362Z Topic my.i: Got message MSG_3
+2020-12-01T15:25:17.361Z Topic my.o: MSG_1

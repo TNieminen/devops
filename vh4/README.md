@@ -25,6 +25,7 @@
 - [Heroku multi-container deployment](#heroku-multi-container-deployment)
   - [Steps of deploying to Heroku container service for multiple images](#steps-of-deploying-to-heroku-container-service-for-multiple-images)
   - [Notes for implementation](#notes-for-implementation)
+- [NEXT UP](#next-up)
 - [TODO](#todo)
 
 # Description
@@ -366,6 +367,11 @@ notice that the service managing HTTP calls needs to be called Dockerfile.web to
     - https://medium.com/@oyetoketoby80/how-to-write-unit-test-for-your-rest-api-f8f71376273f
     - It seems that what is seen as unit testing is really integration testing most of the time, maybe I could seek to do first unit tests for methods and then integration tests on top?
   
+
+# NEXT UP
+- [ ] Add corresponding handlers to services
+- [ ] Add shutdown and init methods for local dev using this https://www.thegeekstuff.com/2016/04/docker-compose-up-stop-rm/
+- [ ] Add shutdown and init methods for production
 # TODO
 - [ ] And hot code reloading to all scripts
 - [ ] Allow development without a Docker environment

@@ -1,6 +1,7 @@
 const rabbitMq = require('amqplib')
 const rabbit = require('./rabbit')
-const requiredKeys = ['CONNECTION_STRING', 'EXCHANGE']
+const {EventEmitter} = require('events')
+const requiredKeys = ['CONNECTION_STRING']
 
 
 /**
@@ -11,21 +12,15 @@ const requiredKeys = ['CONNECTION_STRING', 'EXCHANGE']
  */
 
 
-function validateRabbitConfig(rabbitConfig) {
-  requiredKeys.forEach((key) => {
-    if (!rabbitConfig[`${key}`]) {
-      throw new Error(`Queue requires config key ${key}`)
-    }
-  })
-}
-
 module.exports = class Queue {
   /**
    * @description Queue wrapper to handle topic and fanout rabbit consumers and producers
    * @param {{topicProducer:boolean, topicConsumer:{topic:string}, fanoutConsumer:boolean, fanoutProducer:boolean, rabbitConfig:rabbitMqOptions }} config
    */
   constructor({topicProducer, topicConsumer, fanoutProducer, fanoutConsumer, rabbitConfig}) {
-    validateRabbitConfig(rabbitConfig)
+    if (!rabbitConfig.CONNECTION_STRING) {
+      throw new Error('Connection string must be defined')
+    }
     this.rabbitConfig = rabbitConfig
     if (topicProducer) {
       this.initTopicProducer()  
@@ -46,24 +41,34 @@ module.exports = class Queue {
     this.isTopicConsumerErrorState = true
     this.isFanoutProducerErrorState = true
     this.isFanoutConsumerErrorState = true
+    this.receiveTopicMessages = true
     this.messages = {}
+    this.emitter = new EventEmitter()
   }
 
+  on(event,fn) {
+    this.emitter.on(event,fn)
+  }
+
+
   async initFanoutConsumer() {
+    if (!this.rabbitConfig.FANOUT_EXCHANGE) {
+      throw new Error('Fanout exchange must be defined')
+    }
     try {
       const {channel, queue} = await rabbit.initFanoutConsumer({
         rabbitMq,
         connectionString:this.rabbitConfig.CONNECTION_STRING,
         topic: '',
-        exchange: this.rabbitConfig.EXCHANGE
+        exchange: this.rabbitConfig.FANOUT_EXCHANGE
       })
       this.fanoutConsumer = channel
       this.fanoutConsumer.consume(queue, (message) => {
         if (message !== null) {
-          this.putMessage(message)
+          this.putMessage(message, 'fanout')
           // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
           // however for development simplicity we'll just save messages and acknowledge them immediately
-          this.fanoutConsumer.consumer.ack(message)
+          this.fanoutConsumer.ack(message)
         }
       })
       this.isFanoutConsumerErrorState = false
@@ -81,11 +86,14 @@ module.exports = class Queue {
   }
 
   async initFanoutProducer() {
+    if (!this.rabbitConfig.FANOUT_EXCHANGE) {
+      throw new Error('Fanout exchange must be defined')
+    }
     try {
       this.fanoutProducer = await rabbit.initFanoutProducer({
         rabbitMq,
         connectionString:this.rabbitConfig.CONNECTION_STRING,
-        exchange: this.rabbitConfig.EXCHANGE
+        exchange: this.rabbitConfig.FANOUT_EXCHANGE
       })
       this.isFanoutProducerErrorState = false
       this.fanoutProducer.on('close',(err) => {
@@ -102,11 +110,14 @@ module.exports = class Queue {
   }
 
   async initTopicProducer() {
+    if (!this.rabbitConfig.TOPIC_EXCHANGE) {
+      throw new Error('Topic exchange must be defined')
+    }
     try {
       this.topicProducer = await rabbit.initTopicProducer({
         rabbitMq,
         connectionString:this.rabbitConfig.CONNECTION_STRING,
-        exchange: this.rabbitConfig.EXCHANGE
+        exchange: this.rabbitConfig.TOPIC_EXCHANGE
       })
       this.isTopicProducerErrorState = false
       this.topicProducer.on('close',(err) => {
@@ -123,20 +134,23 @@ module.exports = class Queue {
   }
 
   async initTopicConsumer(config) {
+    if (!this.rabbitConfig.TOPIC_EXCHANGE) {
+      throw new Error('Topic exchange must be defined')
+    }
     try {
       const {channel, queue} = await rabbit.initTopicConsumer({
         rabbitMq,
         connectionString:this.rabbitConfig.CONNECTION_STRING,
         topic: config.topic,
-        exchange: this.rabbitConfig.EXCHANGE
+        exchange: this.rabbitConfig.TOPIC_EXCHANGE
       })
       this.topicConsumer = channel
       this.topicConsumer.consume(queue, (message) => {
-        if (message !== null) {
-          this.putMessage(message)
+        if (message !== null && this.receiveTopicMessages) {
+          this.putMessage(message, 'topic')
           // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
           // however for development simplicity we'll just save messages and acknowledge them immediately
-          this.topicConsumer.consumer.ack(message)
+          this.topicConsumer.ack(message)
         }
       })
       this.isTopicConsumerErrorState = false
@@ -206,7 +220,8 @@ module.exports = class Queue {
     if (this.isTopicProducerErrorState) {
       await this.waitForTopicProducerResolved()
     }
-    return this.topicProducer.publish(this.rabbitConfig.EXCHANGE, topic, Buffer.from(message))  
+    console.log(`SENDING MESSAGE ${message} with topic ${topic}`)
+    return this.topicProducer.publish(this.rabbitConfig.TOPIC_EXCHANGE, topic, Buffer.from(message))  
   }
 
   async publishFanoutMessage({message}) {
@@ -217,7 +232,7 @@ module.exports = class Queue {
       await this.waitForFanoutProducerResolved()
     }
     // we don't define a topic on fanout mode
-    return this.fanoutProducer.publish(this.rabbitConfig.EXCHANGE,'', Buffer.from(message))  
+    return this.fanoutProducer.publish(this.rabbitConfig.FANOUT_EXCHANGE,'', Buffer.from(message))  
   }
 
 
@@ -226,10 +241,20 @@ module.exports = class Queue {
   * @description saves a message to local state
   * @param {{content:'{id, payload, timestamp}'}} msg
   */
-  putMessage(msg) {
-    const message = JSON.parse(msg.content)
-    const {id, payload, timestamp} = message
-    this.messages[`${id}`] = {payload, timestamp}
+  putMessage(msg, type) {
+    if (type === 'fanout') {
+      const message = JSON.parse(msg.content)
+      const {id} = message
+      this.messages[`${id}`] = message
+      console.log('Putting and Emitting message fanout control', message)
+      this.emitter.emit('message', message)
+    }
+    else {
+      const message = msg.content.toString()
+      const payload = msg.fields.routingKey
+      this.emitter.emit('message', {payload, message})
+    }
+
     return this.messages
   }
 
@@ -248,5 +273,13 @@ module.exports = class Queue {
   clearMessages() {
     Object.keys(this.messages).forEach(key => delete this.messages[`${key}`])
     return this.messages
+  }
+
+  stopReceivingTopicMessages() {
+    this.receiveTopicMessages = false
+  }
+
+  startReceivingTopicMessages() {
+    this.receiveTopicMessages = true
   }
 }

@@ -1,70 +1,84 @@
 require('dotenv-defaults').config()
 const rabbitMq = require('amqplib')
-const {initExchangeConsumer, initExchangeProducer} = require('@badgrhammer/rabbitmq-helpers')
+const {initTopicConsumer, initTopicProducer, initFanoutConsumer, initFanoutProducer} = require('@badgrhammer/rabbitmq-helpers')
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV, LOGLEVEL} = process.env
 
 const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}?heartbeat=5` 
 
+/**
+ * @description a local store for received messages
+ */
+const messages = {}
+
 class Queue {
   constructor() {
     if (ENV !== 'test') {
-      this.initProducer()
-      this.initConsumer()  
+      this.initTopicProducer()
+      this.initTopicConsumer()  
     }
-    this.isProducerErrorState = false
-    this.isConsumerErrorState = false
+    this.isTopicProducerErrorState = false
+    this.isTopicConsumerErrorState = false
   }
-  async initProducer() {
+
+  async initFanoutConsumer() {
+    
+  }
+
+  async initFanoutProducer() {
+    
+  }
+
+  async initTopicProducer() {
     try {
-      this.producer = await initExchangeProducer({
+      this.topicProducer = await initTopicProducer({
         rabbitMq,
         connectionString,
         exchange: EXCHANGE
       })
-      this.isProducerErrorState = false
-      this.producer.on('close',(err) => {
-        console.warn('Queue Producer:', err)
-        this.isProducerErrorState = true
-        this.initProducer()
+      this.isTopicProducerErrorState = false
+      this.topicProducer.on('close',(err) => {
+        console.warn('Queue TopicProducer:', err)
+        this.isTopicProducerErrorState = true
+        this.initTopicProducer()
       })
     }
     catch (err) {
-      console.warn('Queue Producer:', err)
-      this.isProducerErrorState = true
+      console.warn('Queue TopicProducer:', err)
+      this.isTopicProducerErrorState = true
       setTimeout(() => this.initProducer(),1000)
     }
   }
 
-  async initConsumer() {
+  async initTopicConsumer() {
     try {
-      const {channel, queue} = await initExchangeConsumer({
+      const {channel, queue} = await initTopicConsumer({
         rabbitMq,
         connectionString,
         topic: 'my.control-response',
         exchange: EXCHANGE
       })
-      this.consumer = channel
-      this.consumer.consume(queue, (message) => {
+      this.topicConsumer = channel
+      this.topicConsumer.consume(queue, (message) => {
         if (message !== null) {
           putMessage(message)
           // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
           // however for development simplicity we'll just save messages and acknowledge them immediately
-          consumer.ack(message)
+          this.topicConsumer.consumer.ack(message)
         }
       })
-      this.isConsumerErrorState = false
-      this.consumer.on('close',(err) => {
-        console.warn('Queue Consumer:', err)
-        this.isConsumerErrorState = true
-        this.initConsumer()
+      this.isTopicConsumerErrorState = false
+      this.topicConsumer.on('close',(err) => {
+        console.warn('Queue TopicConsumer:', err)
+        this.isTopicConsumerErrorState = true
+        this.initTopicConsumer()
       })
     }
     catch (err) {
       console.warn('Queue Consumer:', err)
-      this.isConsumerErrorState = true
-      setTimeout(() => this.initConsumer(),1000)
+      this.isTopicConsumerErrorState = true
+      setTimeout(() => this.initTopicConsumer(),1000)
     }
     
   }
@@ -78,40 +92,45 @@ class Queue {
    * solution would be to either time the Docker setup or alternatively maybe just enforce
    * absolute amount of tries before failing the request
    */
-  waitForProducerResolved() {
+  waitForTopicProducerResolved() {
     return new Promise((resolve,reject) => {
       setInterval(() => {
-        if (!this.isProducerErrorState) {
+        if (!this.isTopicProducerErrorState) {
           resolve()
         }
       },1000)
     })
   }
 
-  waitForConsumerResolved() {
+  waitForFanoutProducerResolved() {
     return new Promise((resolve,reject) => {
       setInterval(() => {
-        if (!this.isConsumerErrorState) {
+        if (!this.isFanoutProducerErrorState) {
           resolve()
         }
       },1000)
     })
   }
 
-  async publishMessage(message) {
-    if (this.isProducerErrorState) {
-      await this.waitForProducerResolved()
+  async publishTopicMessage(message) {
+    if (this.isTopicProducerErrorState) {
+      await this.waitForTopicProducerResolved()
     }
     return this.producer.publish(EXCHANGE,'my.control-request', Buffer.from(message))  
   }
+
+  async publishFanoutMessage(message) {
+    if (this.isFanoutProducerErrorState) {
+      await this.waitForFanoutProducerResolved()
+    }
+    // we don't define a topic on fanout mode
+    return this.producer.publish(EXCHANGE,'', Buffer.from(message))  
+  }
+
 }
 
 const queue = new Queue()
 
-/**
- * @description a local store for received messages
- */
-const messages = {}
 
 /**
  * @description saves a message to local state
@@ -133,8 +152,10 @@ function getMessageById(id) {
 
 /**
  * @description sends control message to queue service with id
+ * - if type is set to fanout messages are delivered to all services
+ * - if type is set to topic, only services subscribed to that topic receive the message
  */
-async function sendMessage({timestamp, id, payload}) {
+async function sendMessage({timestamp, id, payload, type}) {
   if (!id) {
     throw new Error('Queue message has to have and id')
   }
@@ -145,18 +166,26 @@ async function sendMessage({timestamp, id, payload}) {
     throw new Error('Cannot send message without valid timestamp')
   }
   const message = JSON.stringify({id, payload, timestamp})
-  return publishMessage(message)
+  return publishMessage(message, type)  
+  
 }
 
 /**
  * @private
  * @description publishes a message to rabbitMQ, in tests env return
  */
-async function publishMessage(message) {
+async function publishMessage(message, type) {
+  if (type !== 'fanout' && type !== 'topic') {
+    throw new Error('Message type needs to either topic or fanout')
+  }
   if (ENV === 'test') {
     return // mocking rabbitmq for testing purposes is not worth the effort at this time
   }
-  return queue.publishMessage(message)
+  if (type === 'topic') {
+    return queue.publishTopicMessage(message)
+  }
+  return queue.publishFanoutMessage(message)
+  
 }
 
 function clearMessages() {

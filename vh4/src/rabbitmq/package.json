@@ -4,14 +4,18 @@
   "description": "helper functions for rabbitmq operations",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "devDependencies": {
-    "amqplib": "^0.6.0"
+    "test": "ENV=test nyc mocha"
   },
   "author": "",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "amqplib": "^0.6.0",
+    "expect": "^26.6.2",
+    "mocha": "^8.2.1",
+    "nyc": "^15.1.0",
+    "sinon": "^9.2.1"
   }
 }

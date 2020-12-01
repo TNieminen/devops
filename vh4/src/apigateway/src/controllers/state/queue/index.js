@@ -18,16 +18,62 @@ class Queue {
       this.initTopicProducer()
       this.initTopicConsumer()  
     }
-    this.isTopicProducerErrorState = false
-    this.isTopicConsumerErrorState = false
+    this.isTopicProducerErrorState = true
+    this.isTopicConsumerErrorState = true
+    this.isFanoutProducerErrorState = true
+    this.isFanoutConsumerErrorState = true
   }
 
   async initFanoutConsumer() {
-    
+    try {
+      const {channel, queue} = await initFanoutConsumer({
+        rabbitMq,
+        connectionString,
+        topic: '',
+        exchange: EXCHANGE
+      })
+      this.fanoutConsumer = channel
+      this.fanoutConsumer.consume(queue, (message) => {
+        if (message !== null) {
+          putMessage(message)
+          // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
+          // however for development simplicity we'll just save messages and acknowledge them immediately
+          this.fanoutConsumer.consumer.ack(message)
+        }
+      })
+      this.isFanoutConsumerErrorState = false
+      this.fanoutConsumer.on('close',(err) => {
+        console.warn('Queue TopicConsumer:', err)
+        this.isFanoutConsumerErrorState = true
+        this.initFanoutConsumer()
+      })
+    }
+    catch (err) {
+      console.warn('Queue Consumer:', err)
+      this.isFanoutConsumerErrorState = true
+      setTimeout(() => this.initFanoutConsumer(),1000)
+    }
   }
 
   async initFanoutProducer() {
-    
+    try {
+      this.fanoutProducer = await initFanoutProducer({
+        rabbitMq,
+        connectionString,
+        exchange: EXCHANGE
+      })
+      this.isFanoutProducerErrorState = false
+      this.fanoutProducer.on('close',(err) => {
+        console.warn('Queue FanoutProducer:', err)
+        this.isFanoutProducerErrorState = true
+        this.initFanoutProducer()
+      })
+    }
+    catch (err) {
+      console.warn('Queue FanoutProducer:', err)
+      this.isFanoutProducerErrorState = true
+      setTimeout(() => this.initFanoutProducer(),1000)
+    }
   }
 
   async initTopicProducer() {
@@ -47,7 +93,7 @@ class Queue {
     catch (err) {
       console.warn('Queue TopicProducer:', err)
       this.isTopicProducerErrorState = true
-      setTimeout(() => this.initProducer(),1000)
+      setTimeout(() => this.initTopicProducer(),1000)
     }
   }
 
@@ -80,7 +126,6 @@ class Queue {
       this.isTopicConsumerErrorState = true
       setTimeout(() => this.initTopicConsumer(),1000)
     }
-    
   }
 
   /**

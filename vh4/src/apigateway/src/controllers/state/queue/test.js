@@ -38,35 +38,27 @@ describe('===== APIGATEWAY State Controller Queue - Unit Tests =====', () => {
   describe('==== QUEUE sendMessage ====', () => {
 
     it('Should send message successfully', async() => {
-      const timestamp = new Date()
+      const timestamp = Date.now()
       const message = {id:1, payload:'TEST', timestamp}
       await expect(await queue.sendMessage(message)).resolves
     })
 
     it('Should throw error if id is not defined', async() => {
-      const timestamp = new Date()
+      const timestamp = Date.now()
       const message = {payload:'TEST', timestamp}
       await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Queue message has to have and id'))
     })
 
     it('Should throw error if payload is not defined', async() => {
-      const timestamp = new Date()
+      const timestamp = Date.now()
       const message = {id:1, timestamp}
       await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Cannot send message without payload'))
     })
 
-    it('Should throw error if timestamp is not defined', async() => {
+    it('Should throw error if timestamp is not valid', async() => {
       const message = {id:1, payload:'TEST'}
-      await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Cannot send message without timestamp'))
+      await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Cannot send message without valid timestamp'))
     })
-
-    it('Should throw error if timestamp is not a valid date object', async() => {
-      const message = {id:1, payload:'TEST', timestamp: Date.now()}
-      await expect(queue.sendMessage(message)).rejects.toEqual(new Error('Timestamp needs to be a valid date object'))
-    })
-
-
-
   })
 
   describe('==== QUEUE clearMessages ====', () => {

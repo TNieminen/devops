@@ -14,17 +14,21 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
     it('Should PAUSE the service successfully', async() => {
       // insert response message to state
       const id = Date.now()
-      queue.putMessage({content:JSON.stringify({id, payload:'PAUSE'})})
-      const timestamp = new Date()
-      await expect(state.changeState({timestamp, id, payload:'PAUSE'})).resolves.toEqual('PAUSE')
+      const timestamp = Date.now()
+      const payload = 'PAUSE'
+      const message = {id, payload, timestamp}
+      queue.putMessage({content:JSON.stringify(message)})
+      await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
     it('Should set the service to RUNNING successfully', async() => {
       // insert response message to state
       const id = Date.now()
-      const timestamp = new Date()
-      queue.putMessage({content:JSON.stringify({id, payload:'RUNNING'})})
-      await expect(state.changeState({timestamp, id, payload:'RUNNING'})).resolves.toEqual('RUNNING')
+      const timestamp = Date.now()
+      const payload = 'RUNNING'
+      const message = {id, payload, timestamp}
+      queue.putMessage({content:JSON.stringify(message)})
+      await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
     it('Should reject if payload is not defined', async() => {
@@ -59,8 +63,8 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       })
       it('Should return new state after update', async() => {
         // set state to running
-        queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING'})})
-        const timestamp = new Date()
+        const timestamp = Date.now()
+        queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING', timestamp})})
         await state.changeState({timestamp, id:1, payload:'RUNNING'})
         // expect this to be reflected in local state
         expect(state.getState()).toEqual('RUNNING')
@@ -71,7 +75,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       it('Should return a log when it exists', async() => {
         // set state to running
         queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING'})})
-        const timestamp = new Date()
+        const timestamp = Date.now()
         await state.changeState({timestamp, id:1, payload:'RUNNING'})
         //
         expect(state.getLog()).toEqual(`${timestamp.toISOString()} RUNNING`)

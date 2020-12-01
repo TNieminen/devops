@@ -6,9 +6,9 @@ services:
     expose:
       - '5672'
     # For debugging and development to access rabbit in local network
-    # ports:
-    # - "15672:15672"
-    # - "5672:5672"
+    ports:
+      - '15672:15672'
+      - '5672:5672'
     networks:
       - rabbit-network
     healthcheck:
@@ -21,7 +21,7 @@ services:
       # Naming standard because of Heroku
       # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
       context: ./src/orig
-      dockerfile: Dockerfile.orig
+      dockerfile: Dockerfile
     command: yarn start
     image: orig
     # The rabbit startup will take some time in which time the initializations
@@ -41,7 +41,7 @@ services:
       # Naming standard because of Heroku
       # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
       context: ./src/obse
-      dockerfile: Dockerfile.obse
+      dockerfile: Dockerfile
     command: yarn start
     image: obse
     environment:
@@ -59,7 +59,7 @@ services:
       # Naming standard because of Heroku
       # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
       context: ./src/imed
-      dockerfile: Dockerfile.imed
+      dockerfile: Dockerfile
     command: yarn start
     image: imed
     restart: always
@@ -76,13 +76,13 @@ services:
       # Naming standard because of Heroku
       # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
       context: ./src/httpserv
-      dockerfile: Dockerfile.web
+      dockerfile: Dockerfile
     command: yarn start
     image: httpserv
     environment:
       - ENV=development # https://docs.docker.com/compose/environment-variables/
     ports:
-      - 8080:8080
+      - 8082:8082
     restart: always
     depends_on:
       - rabbit
@@ -90,6 +90,23 @@ services:
       - rabbit-network
     volumes:
       - data:/home/node/data/
+  apigateway:
+    build:
+      # Naming standard because of Heroku
+      # https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images
+      context: ./src/apigateway
+      dockerfile: Dockerfile
+    command: yarn start
+    image: apigateway
+    environment:
+      - ENV=development # https://docs.docker.com/compose/environment-variables/
+    ports:
+      - 8081:8081
+    restart: always
+    depends_on:
+      - rabbit
+    networks:
+      - rabbit-network
 networks:
   rabbit-network:
 volumes:

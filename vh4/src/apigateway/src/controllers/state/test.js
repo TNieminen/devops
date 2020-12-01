@@ -1,12 +1,14 @@
 require('dotenv-defaults').config()
 const expect = require('expect')
 const state = require('./index')
-const queue = require('./queue')
 
 describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
   afterEach(() => {
     state.clearState()
     state.clearLog()
+  })
+
+  beforeEach(() => {
   })
 
   describe('==== PUT ====', () => {
@@ -17,7 +19,6 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'PAUSE'
       const message = {id, payload, timestamp}
-      queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -27,7 +28,6 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'RUNNING'
       const message = {id, payload, timestamp}
-      queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -37,7 +37,6 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'SHUTDOWN'
       const message = {id, payload, timestamp}
-      queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -47,7 +46,6 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'INIT'
       const message = {id, payload, timestamp}
-      queue.putMessage({content:JSON.stringify(message)})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -78,33 +76,31 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
     })
 
     describe('/state', () => {
+
       it('Should return shutdown state if we have no state information set', async() => {
         expect(state.getState()).toEqual('SHUTDOWN')
       })
       it('Should return new state after update', async() => {
         // set state to running
         const timestamp = Date.now()
-        queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING', timestamp})})
         await state.changeState({timestamp, id:1, payload:'RUNNING'})
         // expect this to be reflected in local state
         expect(state.getState()).toEqual('RUNNING')
       })  
+
     })
 
     describe('/run-log', () => {
       it('Should return a log when it exists', async() => {
         // set state to running
         const timestamp = Date.now()
-        queue.putMessage({content:JSON.stringify({id:1, payload:'RUNNING', timestamp})})
         await state.changeState({timestamp, id:1, payload:'RUNNING'})
         expect(state.getLog()).toEqual(`${new Date(timestamp).toISOString()} RUNNING\n`)
       })
       it('Should append to, not replace, old log', async() => {
         const firstChange = {timestamp:Date.now(), id:1, payload:'RUNNING'}
         const secondChange = {timestamp:Date.now(), id:2, payload:'PAUSED'}
-        queue.putMessage({content:JSON.stringify(firstChange)})
         await state.changeState(firstChange)
-        queue.putMessage({content:JSON.stringify(secondChange)})
         await state.changeState(secondChange)
         const firstLog = `${new Date(firstChange.timestamp).toISOString()} ${firstChange.payload}\n`
         const secondLog = `${new Date(secondChange.timestamp).toISOString()} ${secondChange.payload}\n`
@@ -115,6 +111,39 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       })
     })
     
+  })
+
+  describe('==== sendMessage ====', () => {
+
+    it('Should send RUNNING message successfully', async() => {
+      const timestamp = Date.now()
+      const message = {id:1, payload:'RUNNING', timestamp, type:'topic', topic:'mytopic'}
+      await expect(await state.sendMessage(message)).resolves
+    })
+
+    it('Should throw error if id is not defined', async() => {
+      const timestamp = Date.now()
+      const message = {payload:'TEST', timestamp, type:'topic'}
+      await expect(state.sendMessage(message)).rejects.toEqual(new Error('Queue message has to have and id'))
+    })
+
+    it('Should throw error if payload is not defined', async() => {
+      const timestamp = Date.now()
+      const message = {id:1, timestamp, type:'topic'}
+      await expect(state.sendMessage(message)).rejects.toEqual(new Error('Cannot send message without payload'))
+    })
+
+    it('Should throw error if timestamp is not valid', async() => {
+      const message = {id:1, payload:'TEST', type:'topic'}
+      await expect(state.sendMessage(message)).rejects.toEqual(new Error('Cannot send message without valid timestamp'))
+    })
+
+    it('Should throw error if type is not defined', async() => {
+      const timestamp = Date.now()
+      const message = {id:1, timestamp, payload:'TEST'}
+      await expect(state.sendMessage(message)).rejects.toEqual(new Error('Message type needs to either topic or fanout'))
+    })
+
   })
   
 })

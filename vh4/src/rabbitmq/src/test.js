@@ -4,7 +4,8 @@ const rabbit = require('./rabbit')
 const sinon = require('sinon')
 
 const rabbitConfig = {
-  EXCHANGE:'TEST_EXCHANGE',
+  FANOUT_EXCHANGE:'FANOUT_EXCHANGE',
+  TOPIC_EXCHANGE:'TOPIC_EXCHANGE',
   CONNECTION_STRING:'TEST_CONNECTIONSTRING'
 }
 
@@ -34,6 +35,7 @@ const consumerMock = {
   queue:'TEST_QUEUE'
 }
 
+const messageEmit = sinon.spy()
 
 
 describe('===== APIGATEWAY State Queue - Unit Tests =====', () => {
@@ -48,20 +50,28 @@ describe('===== APIGATEWAY State Queue - Unit Tests =====', () => {
     stubFanoutProducer.returns(producerMock)
     stubFanoutConsumer.returns(consumerMock)
     queue = new Queue({rabbitConfig, topicConsumer:{topic:'test-topic'}, topicProducer:true, fanoutConsumer:true, fanoutProducer:true})
+    queue.on('message', message => messageEmit(message))
   })
   afterEach(() => {
     stubTopicProducer.restore()
     stubTopicConsumer.restore()
     stubFanoutProducer.restore()
     stubFanoutConsumer.restore()
+    messageEmit.resetHistory()
   })
   
   describe('==== Queue Constructor ====', () => {
 
-    it('Should fail creating queue without valid exchange', () => {
+    it('Should fail creating queue without valid fanout exchange', () => {
       const tmpConfig = JSON.parse(JSON.stringify(rabbitConfig))
-      delete tmpConfig['EXCHANGE']
-      return expect(() => new Queue({rabbitConfig:tmpConfig})).toThrowError(new Error('Queue requires config key EXCHANGE'))
+      delete tmpConfig['FANOUT_EXCHANGE']
+      return expect(() => new Queue({rabbitConfig:tmpConfig})).toThrowError(new Error('Queue requires config key FANOUT_EXCHANGE'))
+    })
+
+    it('Should fail creating queue without valid topic exchange', () => {
+      const tmpConfig = JSON.parse(JSON.stringify(rabbitConfig))
+      delete tmpConfig['TOPIC_EXCHANGE']
+      return expect(() => new Queue({rabbitConfig:tmpConfig})).toThrowError(new Error('Queue requires config key TOPIC_EXCHANGE'))
     })
 
     it('Should fail creating queue without valid connection string', () => {
@@ -81,14 +91,23 @@ describe('===== APIGATEWAY State Queue - Unit Tests =====', () => {
 
   describe('==== QUEUE putMessage ====', () => {
 
-    it('Should return messages object that contains our message', () => {
+    it('Should return messages object that contains our fanout message', () => {
       const message = '{"id":1, "payload":"TEST", "timestamp":1}'
-      expect(queue.putMessage({content:message})).toMatchObject({1:{payload:'TEST', timestamp:1}})
+      expect(queue.putMessage({content:message},type = 'fanout')).toMatchObject({1:{payload:'TEST', timestamp:1}})
+      expect(messageEmit).toHaveBeenCalledWith(JSON.parse(message))
     })
 
     it('Should throw an error if message cannot be parsed', () => {
       const message = undefined
-      expect(() => queue.putMessage({content:message})).toThrow()
+      expect(() => queue.putMessage({content:message}, type = 'fanout')).toThrow()
+      expect(messageEmit).not.toHaveBeenCalled()
+    })
+
+    it('Should return a messages object that contains our topic object', () => {
+      // there is no requirement to store topic messages, hence we are not storing these into messages or assigning a unique id
+      const message = Buffer.from('TEST')
+      queue.putMessage({fields:{routingKey:'my.o'},content:message},type = 'topic')
+      expect(messageEmit).toHaveBeenCalledWith({payload:'my.o', message:'TEST'})
     })
 
   })

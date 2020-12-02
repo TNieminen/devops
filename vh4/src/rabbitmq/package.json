@@ -1,6 +1,6 @@
 {
   "name": "@badgrhammer/rabbitmq-helpers",
-  "version": "3.0.1",
+  "version": "4.0.1",
   "description": "helper functions for rabbitmq operations",
   "main": "./src/index.js",
   "scripts": {

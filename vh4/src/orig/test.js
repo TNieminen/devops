@@ -81,6 +81,36 @@ describe('===== ORIG =====', () => {
         done()
       },100)
     })
+
+    it('Should start sending messages after RUNNING sent from the queue', (done) => {
+      orig = new Orig({messageIntervalTime:100})
+      orig.stopSendingMessages()
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      const message = {id:1, payload:'RUNNING', timestamp:1}
+      orig.handleMessage(message)
+      setTimeout(() => {
+        sinon.assert.calledWith(spy,{message:JSON.stringify(message), topic:'control-response'})
+        sinon.assert.calledWith(spy, {message:'MSG_1',topic:'my.o'})
+        spy.restore()
+        done()
+      },100)
+    })
+
+    it('Should return error after RUNNING sent from the queue if state is SHUTDOWN', (done) => {
+      orig = new Orig({messageIntervalTime:100})
+      orig.stopSendingMessages()
+      orig.state = 'SHUTDOWN'
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      const message = {id:1, payload:'RUNNING', timestamp:1}
+      orig.handleMessage(message)
+      setTimeout(() => {
+        const newMessage = {...message, error:'Error: Cannot set to running when shutdown'}
+        sinon.assert.calledWith(spy,{message:JSON.stringify(newMessage), topic:'control-response'})
+        sinon.assert.calledWith(spy, {message:'MSG_1',topic:'my.o'})
+        spy.restore()
+        done()
+      },200)
+    })
     
     it('Should start sending messages on init', () => {
       expect(orig.messageInterval).toBeDefined()

@@ -244,10 +244,16 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@badgrhammer/rabbitmq-helpers@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@badgrhammer/rabbitmq-helpers/-/rabbitmq-helpers-3.0.1.tgz#471a8f8e1688df4f7d66a6f091e3923840220487"
-  integrity sha512-5tWt5gtzkLUt8jw88gHygKrsPthIahcZKZn3/BnrD8UGG0x+F4xKQIK4JaoOcDoqUm2RLpsXH+IAyePM7EJT5A==
+"@badgrhammer/rabbitmq-helpers@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@badgrhammer/rabbitmq-helpers/-/rabbitmq-helpers-4.0.1.tgz#4b6c367e821270ed273751b4eb382f56be56ebec"
+  integrity sha512-pG6YON8TEb1S/+PGrDUD22OhL1nNq9sT4rbOwOY/+ZpDHyALlwfEumeLDe3KLsIUmhKIgxA05YLoPcDdVB97hA==
+  dependencies:
+    amqplib "^0.6.0"
+    expect "^26.6.2"
+    mocha "^8.2.1"
+    nyc "^15.1.0"
+    sinon "^9.2.1"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"

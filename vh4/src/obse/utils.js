@@ -67,16 +67,27 @@ function deleteS3File() {
 
 
 
-exports.appendToFile = (message) => {
+async function appendToFile(message) {
+  if (ENV === 'test') {
+    return
+  }
   if (ENV === 'development') {
     return appendToLocalFile(message)
   }
   return appendToS3File(message)
 }
 
-exports.deleteFile = () => {
+async function deleteFile() {
+  if (ENV === 'test') {
+    return
+  }
   if (ENV === 'development') {
     return deleteLocalFile()
   }
   return deleteS3File()
+}
+
+module.exports = {
+  appendToFile,
+  deleteFile
 }

@@ -6,9 +6,9 @@ module.exports = {
   publishTopicMessage({message}) {
     // in reality storing of this message would happen from 
     // a response from an external service, for mocking purposes store original message
-    const {id, payload, timestamp} = JSON.parse(message)
+    const {payload, timestamp} = JSON.parse(message)
     this.messages[id] = {payload,timestamp}
-    this.emitter.emit('message', {id,payload,timestamp})
+    this.emitter.emit('message', {payload,timestamp})
   },
   publishFanoutMessage({message}) {
     // in reality storing of this message would happen from 

@@ -2,16 +2,25 @@ require('dotenv-defaults').config()
 const createError = require('http-errors')
 const express = require('express')
 const path = require('path')
+const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
-
+const {whitelist, matchOrigin} = require('./utils')
 const rootController = require('./controllers/root')
+const {ENV} = process.env
 const app = express()
 
 
 app.use(logger('dev'))
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
+app.use(cors({
+  origin(origin, callback) {
+    const whitelistEnv = whitelist[ENV] || whitelist.development
+    return !origin || matchOrigin(origin, whitelistEnv) ? callback(null, true) : callback(new Error('Not allowed by CORS'))
+  },
+}))
+app.options('*', cors()) // include before route
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 

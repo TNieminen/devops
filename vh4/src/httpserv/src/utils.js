@@ -32,6 +32,31 @@ function readFile() {
   return readS3File()
 }
 
+// For explanations of these,
+// test the match strings at
+// https://regex101.com/
+const development = [
+  /http:\/\/httpserv/, // allow connections from docker httpserv
+  /http:\/\/localhost:[0-9]+$/, // localhost
+]
+const production = [
+  /https:\/\/devops-apigateway.herokuapp.com$/,
+]
+
+const whitelist = {
+  development,
+  staging: development,
+  test: development,
+  production
+}
+
+const matchOrigin = (origin, whitelist = []) => {
+  const allowedOrigins = whitelist
+  return !!allowedOrigins.filter(allowedOrigin => origin.match(allowedOrigin))[0]
+}
+
 module.exports = {
-  readFile
+  readFile,
+  whitelist,
+  matchOrigin
 }

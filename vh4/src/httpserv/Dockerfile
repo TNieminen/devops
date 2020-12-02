@@ -23,7 +23,7 @@ COPY --chown=node:node ./src/ /home/node/app/src/
 VOLUME /home/node/data/
 
 # https://we-are.bookmyshow.com/understanding-expose-in-dockerfile-266938b6a33d
-EXPOSE 8080
+EXPOSE 8082
 
 CMD [ "node", "./src/bin/www"]
 

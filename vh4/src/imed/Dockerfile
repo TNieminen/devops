@@ -18,4 +18,4 @@ COPY --chown=node:node ./.env.defaults /home/node/app/
 COPY --chown=node:node ./.mocharc.js /home/node/app/
 COPY --chown=node:node ./src/ /home/node/app/src/
 
-CMD [ "node", "./index.js"]
+CMD [ "node", "./src/index.js"]

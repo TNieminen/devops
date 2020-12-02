@@ -24,6 +24,7 @@ const rabbitConfig = {
 module.exports = class Obse {
   constructor() {
     this.initQueue()
+    this.initListeners()
     this.state = 'RUNNING'
   }
 
@@ -34,6 +35,17 @@ module.exports = class Obse {
     else {
       this.queue = new Queue({rabbitConfig, topicProducer:true, topicConsumer:{topic:'my.#'}, fanoutConsumer:true})
     }
+  }
+
+  initListeners() {
+    this.queue.on('message',(message) => {
+      console.log('Obse got message', message)
+      this.handleMessage(message)
+    })
+  }
+
+  handleMessage(message) {
+    
   }
 
 }

@@ -1,7 +1,8 @@
 const expect = require('expect')
+const Orig = require('./index')
 
 describe('===== ORIG =====', () => {
-  it('should pass', async() => {
-    expect(true).toEqual(true)
+  it('==== constructor ====', async() => {
+    expect(() => new Orig()).not.toThrow()
   })
 })

@@ -154,7 +154,7 @@ module.exports = class Queue {
       this.topicConsumer.on('close',(err) => {
         console.warn('Queue TopicConsumer:', err)
         this.isTopicConsumerErrorState = true
-        this.initTopicConsumer()
+        this.initTopicConsumer(config)
       })
     }
     catch (err) {

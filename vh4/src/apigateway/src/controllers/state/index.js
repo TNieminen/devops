@@ -43,14 +43,7 @@ async function sendMessage({timestamp, id, payload, type}) {
   if (!timestamp || !Number.isInteger(timestamp)) {
     throw new Error('Cannot send message without valid timestamp')
   }
-  if (type !== 'fanout' && type !== 'topic') {
-    throw new Error('Message type needs to either topic or fanout')
-  }
   const message = JSON.stringify({id, payload, timestamp})
-  if (type === 'topic') {
-    const topic = 'control-request'
-    return queue.publishTopicMessage({message, topic})
-  }
   return queue.publishFanoutMessage({message})  
   
 }
@@ -89,16 +82,7 @@ async function changeState({timestamp, id, payload}) {
   if (state === payload) {
     return {timestamp,payload}
   }
-  let type
-  if (payload === 'SHUTDOWN' || payload === 'INIT') {
-    // Shutdown and init messages are sent to all services
-    type = 'fanout'
-  }
-  else {
-    // Other messages are send in the topic queue and received only by orig
-    type = 'topic'
-  }
-  await sendMessage({timestamp, id, payload, type})
+  await sendMessage({timestamp, id, payload})
   const response = await queryResponse(id)
   if (payload === 'INIT') {
     await initService()

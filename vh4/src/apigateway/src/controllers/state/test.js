@@ -146,13 +146,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const message = {id:1, payload:'TEST', type:'topic'}
       await expect(state.sendMessage(message)).rejects.toEqual(new Error('Cannot send message without valid timestamp'))
     })
-
-    it('Should throw error if type is not defined', async() => {
-      const timestamp = Date.now()
-      const message = {id:1, timestamp, payload:'TEST'}
-      await expect(state.sendMessage(message)).rejects.toEqual(new Error('Message type needs to either topic or fanout'))
-    })
-
+    
   })
   
 })

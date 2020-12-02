@@ -28,6 +28,7 @@ module.exports = class Orig {
    */
   constructor(config = {}) {
     this.state = 'RUNNING'
+    this.messageInterval = {_destroyed:true}
     this.initQueue()
     this.initListeners()
     this.messageIntervalTime = config.messageIntervalTime || defaultMessageIntervalTime
@@ -46,7 +47,6 @@ module.exports = class Orig {
   initListeners() {
     this.queue.on('message',(message) => {
       this.handleMessage(message)
-      this.startSendingMessages()
     })
   }
 
@@ -113,13 +113,14 @@ module.exports = class Orig {
 
   startSendingMessages() {
     let iterator = 0
-    if (!this.messageInterval) {
+    // in node.js interval returns an object, not an id
+    // eslint-disable-next-line no-underscore-dangle
+    if (this.messageInterval._destroyed) {
       this.messageInterval = setInterval(() => {
         const message = `MSG_${iterator += 1}`
         this.queue.publishTopicMessage({message,topic:'my.o'})
         if (iterator === amountOfMessages) {
           clearInterval(this.messageInterval)
-          this.messageInterval = undefined
           this.startSendingMessages()
         }  
       },this.messageIntervalTime)
@@ -128,7 +129,6 @@ module.exports = class Orig {
 
   stopSendingMessages() {
     clearInterval(this.messageInterval)
-    this.messageInterval = undefined
   }
 
 }

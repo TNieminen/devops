@@ -81,7 +81,7 @@ describe('===== OBSE =====', () => {
 
     it('Should handle a my.j message sent from the queue', () => {
       const spy = sinon.spy(fs,'appendToFile')
-      const message = {payload:'my.j', message:'test-message'}
+      const message = {payload:'my.i', message:'test-message'}
       obse.handleMessage(message)
       const expectedOutput = `Topic ${message.payload}: ${message.message}`
       sinon.assert.calledWith(spy,sinon.match(new RegExp(expectedOutput)))

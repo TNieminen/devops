@@ -9,7 +9,7 @@ const logger = pino({level: LOGLEVEL || 'error'})
 const serverUrl = ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = ENV === 'docker' ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
-const {appendToFile, deleteFile} = require('./utils')
+const fs = require('./utils')
 
 const rabbitConfig = {
   RABBIT_SERVER_URL, 
@@ -53,6 +53,12 @@ module.exports = class Obse {
       case 'INIT':
         this.handleInit(message)
         break
+      case 'my.o':
+        this.handleMy(message)
+        break
+      case 'my.i':
+        this.handleMy(message)
+        break
       default:
         console.warn('Received message without handler', message)
         break
@@ -73,6 +79,13 @@ module.exports = class Obse {
     console.log('Setting service to running at INIT')
     this.startReceivingTopicMessages()
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  handleMy(message) {
+    console.log('Handling my', message)
+    const logMessage = `${new Date().toISOString()} Topic ${message.payload}: ${message.message}`
+    fs.appendToFile(logMessage)
   }
 
   startReceivingTopicMessages() {

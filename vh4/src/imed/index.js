@@ -48,6 +48,9 @@ module.exports = class Imed {
       case 'SHUTDOWN':
         this.handleShutdown(message)
         break
+      case 'INIT':
+        this.handleInit(message)
+        break
       default:
         console.warn('Received message without handler', message)
         break
@@ -57,6 +60,16 @@ module.exports = class Imed {
   handleShutdown(message) {
     this.state = 'SHUTDOWN'
     this.stopReceivingTopicMessages()
+    this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+  }
+
+  handleInit(message) {
+    if (this.state === 'RUNNING') {
+      return this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+    }
+    this.state = 'RUNNING'
+    console.log('Setting service to running at INIT')
+    this.startReceivingTopicMessages()
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
   }
   

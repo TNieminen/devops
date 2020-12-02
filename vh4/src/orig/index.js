@@ -25,6 +25,7 @@ const rabbitConfig = {
 module.exports = class Orig {
   constructor() {
     this.initQueue()
+    this.initListeners()
   }
 
   initQueue() {
@@ -35,6 +36,17 @@ module.exports = class Orig {
       this.queue = new Queue({rabbitConfig, topicProducer:true, topicConsumer:{topic:'control-request'}, fanoutConsumer:true})
     }
   }
+
+  initListeners() {
+    this.queue.on('message',(message) => {
+      this.handleMessage(message)
+    })
+  }
+
+  handleMessage(message) {
+    
+  }
+
 }
 
 // function sendMessages(channel) {

@@ -73,6 +73,7 @@ describe('===== ORIG =====', () => {
         sinon.assert.calledOnceWithExactly(spy, {message,topic})
         done()
       },100)
+      spy.restore()
     })
   })
 

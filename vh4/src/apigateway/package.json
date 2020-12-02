@@ -10,7 +10,7 @@
     "docker-test": "docker run apigateway /bin/ash -c 'yarn test'"
   },
   "dependencies": {
-    "@badgrhammer/rabbitmq-helpers": "^4.0.1",
+    "@badgrhammer/rabbitmq-helpers": "^5.0.0",
     "amqplib": "^0.6.0",
     "aws-sdk": "^2.795.0",
     "cookie-parser": "~1.4.4",

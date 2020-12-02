@@ -1,6 +1,7 @@
 require('dotenv-defaults').config()
 const expect = require('expect')
 const state = require('./index')
+const queueMock = require('@badgrhammer/rabbitmq-helpers/src/mock')
 
 describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
   afterEach(() => {
@@ -19,6 +20,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'PAUSE'
       const message = {id, payload, timestamp}
+      queueMock.mockReceivedFanoutMessage({id,payload,timestamp})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -28,6 +30,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'RUNNING'
       const message = {id, payload, timestamp}
+      queueMock.mockReceivedFanoutMessage({id,payload,timestamp})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -37,6 +40,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'SHUTDOWN'
       const message = {id, payload, timestamp}
+      queueMock.mockReceivedFanoutMessage({id,payload,timestamp})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -46,6 +50,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       const timestamp = Date.now()
       const payload = 'INIT'
       const message = {id, payload, timestamp}
+      queueMock.mockReceivedFanoutMessage({id,payload,timestamp})
       await expect(state.changeState(message)).resolves.toEqual({payload, timestamp})
     })
 
@@ -83,6 +88,7 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       it('Should return new state after update', async() => {
         // set state to running
         const timestamp = Date.now()
+        queueMock.mockReceivedFanoutMessage({id:1,payload:'SHUTDOWN',timestamp})
         await state.changeState({timestamp, id:1, payload:'SHUTDOWN'})
         // expect this to be reflected in local state
         expect(state.getState()).toEqual('SHUTDOWN')
@@ -94,12 +100,15 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       it('Should return a log when it exists', async() => {
         // set state to running
         const timestamp = Date.now()
+        queueMock.mockReceivedFanoutMessage({id:1,payload:'SHUTDOWN',timestamp})
         await state.changeState({timestamp, id:1, payload:'SHUTDOWN'})
         expect(state.getLog()).toEqual(`${new Date(timestamp).toISOString()} SHUTDOWN\n`)
       })
       it('Should append to, not replace, old log', async() => {
         const firstChange = {timestamp:Date.now(), id:1, payload:'SHUTDOWN'}
         const secondChange = {timestamp:Date.now(), id:2, payload:'INIT'}
+        queueMock.mockReceivedFanoutMessage(firstChange)
+        queueMock.mockReceivedFanoutMessage(secondChange)
         await state.changeState(firstChange)
         await state.changeState(secondChange)
         const firstLog = `${new Date(firstChange.timestamp).toISOString()} ${firstChange.payload}\n`

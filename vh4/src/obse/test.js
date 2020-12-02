@@ -50,7 +50,7 @@ describe('===== OBSE =====', () => {
       const message = {id:1, payload:'INIT', timestamp:1}
       obse.handleMessage(message)
       sinon.assert.calledWith(messageSpy,{message:JSON.stringify(message), topic:'control-response'})
-      sinon.assert.called(startSpy)
+      sinon.assert.notCalled(startSpy) // we are already receiving messages, don't call again
       messageSpy.restore()
       startSpy.restore()
       done()

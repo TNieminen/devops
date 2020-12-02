@@ -50,6 +50,9 @@ module.exports = class Obse {
       case 'SHUTDOWN':
         this.handleShutdown(message)
         break
+      case 'INIT':
+        this.handleInit(message)
+        break
       default:
         console.warn('Received message without handler', message)
         break
@@ -62,6 +65,16 @@ module.exports = class Obse {
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
   }
 
+  handleInit(message) {
+    if (this.state === 'RUNNING') {
+      return this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+    }
+    this.state = 'RUNNING'
+    console.log('Setting service to running at INIT')
+    this.startReceivingTopicMessages()
+    this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+  }
+
   startReceivingTopicMessages() {
     console.log('Obse starting receiving messages')
     this.queue.startReceivingTopicMessages()
@@ -71,7 +84,7 @@ module.exports = class Obse {
     console.log('Obse stopping receiving messages')
     this.queue.stopReceivingTopicMessages()
   }
-  
+
 }
 
 // async function start() {

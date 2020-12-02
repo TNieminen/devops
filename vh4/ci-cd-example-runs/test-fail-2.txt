@@ -1,0 +1,299 @@
+An example of test run fail early in development
+
+[0KRunning with gitlab-runner 13.5.0 (ece86343)
+[0;m[0K  on docker-stable j8CYJ51s
+[0;msection_start:1606639153:prepare_executor
+[0K[0K[36;1mPreparing the "docker" executor[0;m
+[0;m[0KUsing Docker executor with image docker:latest ...
+[0;m[0KPulling docker image docker:latest ...
+[0;m[0KUsing docker image sha256:6972c414f322dfa40324df3c503d4b217ccdec6d576e408ed10437f508f4181b for docker:latest with digest docker@sha256:9170b902404a630a982a2a6473442d3e2cc2342b66345f7a9cf148f8affcf5d3 ...
+[0;msection_end:1606639162:prepare_executor
+[0Ksection_start:1606639162:prepare_script
+[0K[0K[36;1mPreparing environment[0;m
+[0;mRunning on runner-j8cyj51s-project-2-concurrent-0 via gitlab-runner1...
+section_end:1606639163:prepare_script
+[0Ksection_start:1606639163:get_sources
+[0K[0K[36;1mGetting source from Git repository[0;m
+[0;m[32;1mFetching changes with git depth set to 50...[0;m
+Reinitialized existing Git repository in /builds/root/devops/.git/
+[32;1mChecking out cd1d34c1 as master...[0;m
+
+[32;1mSkipping Git submodules setup[0;m
+section_end:1606639166:get_sources
+[0Ksection_start:1606639166:step_script
+[0K[0K[36;1mExecuting "step_script" stage of the job script[0;m
+[0;m[32;1m$ apk add curl[0;m
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/main/x86_64/APKINDEX.tar.gz
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/community/x86_64/APKINDEX.tar.gz
+(1/3) Installing nghttp2-libs (1.41.0-r0)
+(2/3) Installing libcurl (7.69.1-r1)
+(3/3) Installing curl (7.69.1-r1)
+Executing busybox-1.31.1-r19.trigger
+OK: 12 MiB in 23 packages
+[32;1m$ apk add bash[0;m
+(1/2) Installing readline (8.0.4-r0)
+(2/2) Installing bash (5.0.17-r0)
+Executing bash-5.0.17-r0.post-install
+Executing busybox-1.31.1-r19.trigger
+OK: 13 MiB in 25 packages
+[32;1m$ apk add --update nodejs npm[0;m
+(1/7) Installing brotli-libs (1.0.9-r1)
+(2/7) Installing c-ares (1.16.1-r0)
+(3/7) Installing libgcc (9.3.0-r2)
+(4/7) Installing libstdc++ (9.3.0-r2)
+(5/7) Installing libuv (1.38.1-r0)
+(6/7) Installing nodejs (12.18.4-r0)
+(7/7) Installing npm (12.18.4-r0)
+Executing busybox-1.31.1-r19.trigger
+OK: 71 MiB in 32 packages
+[32;1m$ npm install -g yarn[0;m
+
+> yarn@1.22.10 preinstall /usr/lib/node_modules/yarn
+> :; (node ./preinstall.js > /dev/null 2>&1 || true)
+
+/usr/bin/yarn -> /usr/lib/node_modules/yarn/bin/yarn.js
+/usr/bin/yarnpkg -> /usr/lib/node_modules/yarn/bin/yarn.js
++ yarn@1.22.10
+added 1 package in 4.673s
+[32;1m$ cd ./vh4[0;m
+[32;1m$ yarn test-httpserv[0;m
+yarn run v1.22.10
+$ cd ./src/httpserv && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag httpserv .
+Sending build context to Docker daemon  144.9kB
+
+Step 1/11 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/11 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/11 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/11 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> e1a6209d1d3c
+Step 5/11 : RUN yarn install --frozen-lockfile
+ ---> Running in ec64a2d788db
+yarn install v1.22.5
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+info fsevents@2.1.3: The platform "linux" is incompatible with this module.
+info "fsevents@2.1.3" is an optional dependency and failed compatibility check. Excluding it from installation.
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+Done in 28.76s.
+Removing intermediate container ec64a2d788db
+ ---> e6712dd0559c
+Step 6/11 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> e133d6e1e99f
+Step 7/11 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> f094a6f46b7e
+Step 8/11 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> 2315bc0fe930
+Step 9/11 : VOLUME /home/node/data/
+ ---> Running in d72478e223fe
+Removing intermediate container d72478e223fe
+ ---> b0e846ce9c92
+Step 10/11 : EXPOSE 8080
+ ---> Running in 8ed0ed18561b
+Removing intermediate container 8ed0ed18561b
+ ---> 29f392234d14
+Step 11/11 : CMD [ "node", "./src/bin/www"]
+ ---> Running in a3f169e5e899
+Removing intermediate container a3f169e5e899
+ ---> a5c11fe506e4
+Successfully built a5c11fe506e4
+Successfully tagged httpserv:latest
+$ docker run httpserv /bin/ash -c 'yarn test'
+yarn run v1.22.5
+$ NODE_ENV=test nyc mocha
+
+
+  ===== HTTPSERV Root Controller - Unit Tests =====
+    ✓ Should return correct string return
+    ✓ Should return error status 404 on ENOENT
+    ✓ Should return error status 404 on NoSuchKey
+    ✓ Should throw error when error is not to do with file found
+
+  ===== HTTPSERV Integration tests =====
+[0mGET / [33m404 [0m7.785 ms - 44[0m
+    ✓ Should also pass (41ms)
+
+
+  5 passing (61ms)
+
+----------------------|---------|----------|---------|---------|-------------------
+File                  | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------------|---------|----------|---------|---------|-------------------
+All files             |   88.64 |       50 |   78.95 |   88.64 |                   
+ src                  |   79.59 |       30 |   63.64 |   79.59 |                   
+  index.js            |   76.92 |    16.67 |   33.33 |   76.92 | 21,30,36-41       
+  test.js             |     100 |      100 |     100 |     100 |                   
+  utils.js            |   73.33 |       50 |   66.67 |   73.33 | 10,18-25,32       
+ src/controllers/root |     100 |      100 |     100 |     100 |                   
+  index.js            |     100 |      100 |     100 |     100 |                   
+  test.js             |     100 |      100 |     100 |     100 |                   
+----------------------|---------|----------|---------|---------|-------------------
+Done in 3.80s.
+Done in 55.98s.
+[32;1m$ yarn test-apigateway[0;m
+yarn run v1.22.10
+$ cd ./src/apigateway && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag apigateway .
+Sending build context to Docker daemon  132.1kB
+
+Step 1/11 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/11 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/11 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/11 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 296fb48ad908
+Step 5/11 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> af1109698474
+Step 6/11 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> e3e54f3538b8
+Step 7/11 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> fe841cbac58f
+Step 8/11 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> c7d61a1d7e5b
+Step 9/11 : VOLUME /home/node/data/
+ ---> Using cache
+ ---> a93bc5175198
+Step 10/11 : EXPOSE 8081
+ ---> Using cache
+ ---> 1b73a4a4bd84
+Step 11/11 : CMD [ "node", "./src/bin/www"]
+ ---> Using cache
+ ---> c3025e4bd8b8
+Successfully built c3025e4bd8b8
+Successfully tagged apigateway:latest
+$ docker run apigateway /bin/ash -c 'yarn test'
+yarn run v1.22.5
+$ NODE_ENV=test nyc mocha
+
+
+  ===== API Gateway =====
+    ✓ should pass
+[0mGET / [32m200 [0m6.291 ms - 2[0m
+    ✓ Should also pass
+
+
+  2 passing (46ms)
+
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------|---------|----------|---------|---------|-------------------
+All files |   83.87 |        0 |   66.67 |   83.87 |                   
+ index.js |   77.27 |        0 |   33.33 |   77.27 | 22,28-33          
+ test.js  |     100 |      100 |     100 |     100 |                   
+----------|---------|----------|---------|---------|-------------------
+Done in 3.30s.
+Done in 6.00s.
+[32;1m$ yarn test-imed[0;m
+yarn run v1.22.10
+$ cd ./src/imed && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag imed .
+Sending build context to Docker daemon  87.55kB
+
+Step 1/10 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/10 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/10 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/10 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> a05c2de6fab1
+Step 5/10 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 897472e6a6f6
+Step 6/10 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 9466362e14a0
+Step 7/10 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> 227a2f7a929a
+Step 8/10 : COPY --chown=node:node ./index.js /home/node/app/
+ ---> Using cache
+ ---> 46c81ced2db0
+Step 9/10 : COPY --chown=node:node ./test.js /home/node/app/
+ ---> Using cache
+ ---> 913e99ce305f
+Step 10/10 : CMD [ "node", "./index.js"]
+ ---> Using cache
+ ---> ac180df16837
+Successfully built ac180df16837
+Successfully tagged imed:latest
+$ docker run imed /bin/ash -c 'yarn test'
+yarn run v1.22.5
+$ NODE_ENV=test nyc mocha
+
+
+  ===== IMED =====
+    ✓ should pass
+
+
+  1 passing (11ms)
+
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------|---------|----------|---------|---------|-------------------
+All files |       0 |        0 |       0 |       0 |                   
+----------|---------|----------|---------|---------|-------------------
+Done in 1.54s.
+Done in 4.43s.
+[32;1m$ yarn test-obse[0;m
+yarn run v1.22.10
+$ cd ./src/obse && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag obse .
+Sending build context to Docker daemon  95.74kB
+
+Step 1/12 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/12 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/12 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/12 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> c72cd32d9004
+Step 5/12 : RUN yarn install --frozen-lockfile
+ ---> Running in 63b5e04b0328
+yarn install v1.22.5
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+info fsevents@2.1.3: The platform "linux" is incompatible with this module.
+info "fsevents@2.1.3" is an optional dependency and failed compatibility check. Excluding it from installation.
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+Done in 20.38s.
+Removing intermediate container 63b5e04b0328
+ ---> 07ab4f746815
+Step 6/12 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> 867b599cd83e
+Step 7/12 : COPY --chown=node:node ./index.js /home/node/app/
+ ---> 94b8381e440c
+Step 8/12 : COPY --chown=node:node ./s3.js /home/node/app/
+COPY failed: stat /var/lib/docker/tmp/docker-builder131829588/s3.js: no such file or directory
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+section_end:1606639287:step_script
+[0Ksection_start:1606639287:cleanup_file_variables
+[0K[0K[36;1mCleaning up file based variables[0;m
+[0;msection_end:1606639288:cleanup_file_variables
+[0K[31;1mERROR: Job failed: exit code 1
+[0;m

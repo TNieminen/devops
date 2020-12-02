@@ -9,8 +9,8 @@
     - [Non Docker Development](#non-docker-development)
     - [Docker based development](#docker-based-development)
     - [Testing](#testing)
-      - [Example runs](#example-runs)
 - [CI/CD pipeline](#cicd-pipeline)
+  - [Example runs](#example-runs)
 - [Deployment](#deployment)
   - [Steps of deploying to Heroku container service for multiple images in recursive mode](#steps-of-deploying-to-heroku-container-service-for-multiple-images-in-recursive-mode)
 - [Learnings and reflection](#learnings-and-reflection)
@@ -20,6 +20,7 @@
   - [OBSE](#obse)
   - [ORIG](#orig)
   - [RabbitMq](#rabbitmq)
+  - [Heroku](#heroku)
   - [General thoughts and feedback](#general-thoughts-and-feedback)
 - [Amount of effort](#amount-of-effort)
 - [Notes on docker](#notes-on-docker)
@@ -210,8 +211,7 @@ separately outside docker environment and then integration test them with docker
 
 ### Testing
 
-Each package uses [mocha](https://mochajs.org/) as it's test runner [sinon](https://sinonjs.org/) for test spies, stubs and mock and [expect](https://www.npmjs.com/package/expect) for test result assertion. In some cases sinon assertions are used such as for spies. Tests were placed in each package separately for easier test 
-management and separation of concerns. This is against requirement 3
+Each package uses [mocha](https://mochajs.org/) as it's test runner [sinon](https://sinonjs.org/) for test spies, stubs and mock and [expect](https://www.npmjs.com/package/expect) for test result assertion. In some cases sinon assertions are used such as for spies. For test code coverage we use [Istanbul Reports](https://www.npmjs.com/package/nyc). Tests were placed in each package separately for easier test management and separation of concerns. This is against requirement 3
 `Tests mush be in a separate folder “tests” at the root of your folder tree.`
 but the decision was made for ease of development and because it will
 not affect any functional requirements. This can be updated separately if this 
@@ -223,12 +223,24 @@ which are writted for each module following the [Test-driven Development](https:
 tests could, and should, be added in the future. However this was removed as a goal
 because of time limitations, but will be improved upon later. 
 
-#### Example runs
-TODO
 
 # CI/CD pipeline
 
-TODO
+This project uses a local Gitlab instance with a integrated test runner. Tests are run on push on each branch but deployments happens only on master branch pushes. A preferred mechanism would be to use a PR setup with reviews but this was not implemented because I worked as a single developer directly on master to speed up development. The configuration of the pipeline is
+contained in `.gitlab-ci.yml` in the repository root. The configuration had to be put outside the project root in order for gitlab to detect and run the job.
+
+Each package has it's own tests which are set close to the code to be tested as discussed in section [testing](#testing). Tests use [mocha](https://mochajs.org/) as test runner [sinon](https://sinonjs.org/) for test spies, stubs and mock and [expect](https://www.npmjs.com/package/expect) for test result assertion. However some assertion is done also via Sinon such as in cases where I used test spies. For test code coverage we use [Istanbul Reports](https://www.npmjs.com/package/nyc). If a test fails in the pipeline, the job fails and the deployment script does not run. Test results can then be accessed in the jon log on Gitlab jobs panel. If the tests pass a deployment is started automatically.
+
+Deployment is done via [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) which is installed as a beforescript in the test runner. Downside here is that we need to install the CLI
+and also Node in order to run it and use a docker image. This makes the image quite heavy, but on another note a test run in the pipeline takes on average 3 minutes, which I believe is acceptable.
+Another way to go about shaving this time down would be to use a smaller Docker image and deploy directly to Heroku's docker registry and use the Heroku's API to release new versions. However the method I used saved precious development time and was acceptable as it was.
+Because of limitations of how Heroku handles multi-container deployments some rather ugly "cd" operations have to be done to deploy the right things. This, in addition to other Heroku related headaches, is discussed more in detail in section [deployment](#deployment)
+
+## Example runs
+
+Example CI/CD runs of passes and fails in the CI/CD pipeline can be found in the folder
+`ci-cd-example-runs` in project root.
+
 
 # Deployment
 
@@ -287,6 +299,9 @@ integration tests a big bang approach had the consequences that could be expecte
 However on another note adding those tests in place would have increased the workload
 with a rough estimate of 10-15 hours which would've sent the total time spent on the project
 to around 80 hours.
+
+One regret is also the state of documentation. I wanted to use [swagger](https://swagger.io/)
+with it's yml based route definitions, a friendly ui for documentation, testing and development, but I ran out of time in the project. This would definitely be one of the first things that I would add to the project because it makes understanding and working with the implementation so much easier.
 
 ## HTTPSERV
 
@@ -366,9 +381,26 @@ This is another thing that should be mentioned. In order for me to have flow of:
 I had to find a way to know when the response arrives from the service. I couldn't use the typical way of consuming messages from the queue directly, because this would break the abstraction between queue and state, and I also didn't want to add special callbacks
 because this would've made the implementation even more complex. What I then decided to do was to use a polling mechanism, where when the REST api gets a state change request it would be assigned an id. This message would go to the service and on completion it would send the same message back which we would find by id. If something went wrong the message would also contain an error so we can send that back to the user. An error case example is when you try to change state to `RUNNING` when the current state is `SHUTDOWN`. This polling mechanism worked okay and is relatively clear in it's implementation in apigateway state controller, however what is missing is a timeout. If for some reason for instance the orig service is not up and we change the state to RUNNING, the request will hang until it times out. This is not a very elegant way to handle the issue, but on the other hand if the REST call times out we can always try again because the local state doesn't update before the service resolves and we can always send the request again.
 
+Another headache was figuring out how to mock the queue system in unit tests. This is because I did not want to initialize a RabbitMQ instance just to pass the tests, so I ended up implementing a mock class that can be imported from the module. This way we can then selectively initialize either the mock queue or the actual queue instance depending on the environment. This was not the most elegant solution, but figuring out how to mock the queue when it was sometimes two layers of abstraction down proved to be a time sink from which I decided to get away to get the project done. 
+
+In general I think the queue system was the best way to go given constraints by Heroku, that is that I had only 5 free instances to use. I could've had one each worker have a separate API as a web instance that passes messages to its worker, however it was not clear would a worker instance with a web instance in a dyno count as one or two instances thus breaking the free limit and also how would that communication between the web and worker instances happen. In addition using the queue gave me an opportunity to delve deeper into RabbitMQ whilst making the service also more robust because a http call can fail and to work around that I'd have to create a logic of retrying requests and handling edge cases.
+
+## Heroku
+
+Heroku had some major headaches to get to behave with a multi-container setup discussed more in depth in section [deployment](#deployment). In addition to this I had to work around free tier
+limitations as I'm not willing to spend money on this project, only precious time.
+However once it was setup everything worked quite well. I could have an rabbitMQ instance as an addon and just a couple of env configs later things would be up and running.
+
+If I was to do this project again, and had more time and money, I would look into using a 
+[swarm](https://devcenter.heroku.com/articles/dockhero) deployment, use AWS container service with Elastic Beanstalk or maybe even venture out and setup a Kubernetes cluster each of these options offering better scaling abilities than what Heroku has to offer. This is even more true because the current implementation only scales between 1 and 0 instances and doesn't then
+scale to demand, however this was not outlined as a requirement hence I didn't consider the issue further.
+
 ## General thoughts and feedback
 
+This was a huge project. Hands down I did not expect the amount of thinking and work I put into this. I did end up adding additional features like the static code analysis and hosting the service online (which itself took me at least 15 hours of work), and maybe in retrospect I should've focused more on the bare necessities as a one developer team. Even with this I'm pleased with the end result however feeling the pain of unpolished work.
 
+I'm not sure what is the expectation on the talents of a student to complete this assignment, but at least as a single developer just getting the bare minimum functionality seems like a high call.
+When this is combined with the requirement of TDD, which whereas aids in creating cleaner and more maintainable code and helps in thinking the solution through before implementation it makes "getting things done" considerably slower especially for the uninitiated, I honestly I would not be surprised that many who complete this course in similar setting as I was have had to ditch TDD and hack the system together just to get it done.
 
 # Amount of effort
 

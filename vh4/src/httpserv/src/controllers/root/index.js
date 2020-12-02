@@ -1,5 +1,9 @@
 const utils = require('../../utils')
 
+/**
+ * @description controller for getting log strings
+ * @returns {Promise<string>}
+ */
 module.exports.getRoot = async() => {
   try {
     const data = await utils.readFile()

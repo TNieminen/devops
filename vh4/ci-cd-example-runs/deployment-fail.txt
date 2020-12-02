@@ -1,0 +1,38 @@
+An example of a failed deployment because of request timeout thanks to the Great Firewall of China
+
+[0KRunning with gitlab-runner 13.5.0 (ece86343)
+[0;m[0K  on docker-stable j8CYJ51s
+[0;msection_start:1606639502:prepare_executor
+[0K[0K[36;1mPreparing the "docker" executor[0;m
+[0;m[0KUsing Docker executor with image docker:latest ...
+[0;m[0KPulling docker image docker:latest ...
+[0;m[0KUsing docker image sha256:6972c414f322dfa40324df3c503d4b217ccdec6d576e408ed10437f508f4181b for docker:latest with digest docker@sha256:9170b902404a630a982a2a6473442d3e2cc2342b66345f7a9cf148f8affcf5d3 ...
+[0;msection_end:1606639511:prepare_executor
+[0Ksection_start:1606639511:prepare_script
+[0K[0K[36;1mPreparing environment[0;m
+[0;mRunning on runner-j8cyj51s-project-2-concurrent-0 via gitlab-runner1...
+section_end:1606639512:prepare_script
+[0Ksection_start:1606639512:get_sources
+[0K[0K[36;1mGetting source from Git repository[0;m
+[0;m[32;1mFetching changes with git depth set to 50...[0;m
+Reinitialized existing Git repository in /builds/root/devops/.git/
+[32;1mChecking out 76bec516 as master...[0;m
+
+[32;1mSkipping Git submodules setup[0;m
+section_end:1606639514:get_sources
+[0Ksection_start:1606639514:step_script
+[0K[0K[36;1mExecuting "step_script" stage of the job script[0;m
+[0;m[32;1m$ apk add curl[0;m
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/main/x86_64/APKINDEX.tar.gz
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/community/x86_64/APKINDEX.tar.gz
+ERROR: http://dl-cdn.alpinelinux.org/alpine/v3.12/main: IO ERROR
+WARNING: Ignoring APKINDEX.2c4ac24e.tar.gz: No such file or directory
+ERROR: unsatisfiable constraints:
+  curl (missing):
+    required by: world[curl]
+section_end:1606639521:step_script
+[0Ksection_start:1606639521:cleanup_file_variables
+[0K[0K[36;1mCleaning up file based variables[0;m
+[0;msection_end:1606639523:cleanup_file_variables
+[0K[31;1mERROR: Job failed: exit code 1
+[0;m

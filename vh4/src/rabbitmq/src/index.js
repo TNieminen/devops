@@ -55,11 +55,19 @@ module.exports = class Queue {
     this.emitter = new EventEmitter()
   }
 
+  /**
+   * @public
+   * @description attaches a callback function to emitter emit
+   */
   on(event,fn) {
     this.emitter.on(event,fn)
   }
 
 
+  /**
+   * @private
+   * @description initializes and starts listening to messages from fanout queue
+   */
   async initFanoutConsumer() {
     try {
       const {channel, queue} = await rabbit.initFanoutConsumer({
@@ -91,6 +99,10 @@ module.exports = class Queue {
     }
   }
 
+  /**
+   * @private
+   * @description initializes and starts a fanout producer that can later send messages
+   */
   async initFanoutProducer() {
     try {
       this.fanoutProducer = await rabbit.initFanoutProducer({
@@ -112,6 +124,10 @@ module.exports = class Queue {
     }
   }
 
+  /**
+   * @private
+   * @description initializes and starts a topic producer that can later send messages
+   */
   async initTopicProducer() {
     try {
       this.topicProducer = await rabbit.initTopicProducer({
@@ -133,6 +149,10 @@ module.exports = class Queue {
     }
   }
 
+  /**
+   * @private
+   * @description initializes and starts listening to messages from topic queue
+   */
   async initTopicConsumer(config) { 
     try {
       const {channel, queue} = await rabbit.initTopicConsumer({
@@ -206,6 +226,7 @@ module.exports = class Queue {
 
   /**
    * @description send a message to topic in predefined exchange
+   * @param {{message:string, topic:string}} message
    */
   async publishTopicMessage({message = '', topic = ''}) {
     if (!message) {
@@ -217,10 +238,13 @@ module.exports = class Queue {
     if (this.isTopicProducerErrorState) {
       await this.waitForTopicProducerResolved()
     }
-    console.log(`SENDING MESSAGE ${message} with topic ${topic}`)
     return this.topicProducer.publish(this.rabbitConfig.TOPIC_EXCHANGE, topic, Buffer.from(message))  
   }
 
+  /**
+   * @description send a message to topic in predefined exchange
+   * @param {{message:{timestamp:number, id:number, payload:string}}} message
+   */
   async publishFanoutMessage({message}) {
     if (!message) {
       throw new Error('Cannot publish fanout message without message')
@@ -244,7 +268,6 @@ module.exports = class Queue {
       const message = JSON.parse(msg.content)
       const {id} = message
       this.messages[`${id}`] = message
-      console.log('Putting and Emitting message fanout control', message)
       this.emitter.emit('message', message)
     }
     // This is specifically to handle PAUSE and RUNNING from orig service
@@ -252,7 +275,6 @@ module.exports = class Queue {
       const message = JSON.parse(msg.content)
       const {id} = message
       this.messages[`${id}`] = message
-      console.log('Putting and Emitting message direct control', message)
       this.emitter.emit('message', message)
     }
     // This is the handler for my.* type messages

@@ -3,6 +3,10 @@ const path = require('path')
 const {getObjectPromise} = require('@badgrhammer/s3-helpers')
 const {ENV,FILE_PATH, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_REGION} = process.env
 
+/**
+ * @description reads log string from local file
+ * @returns {Promise<string>}
+ */
 function readLocalFile() {
   return new Promise((resolve,reject) => {
     fs.readFile(path.resolve(__dirname,FILE_PATH),'utf-8',(err, data) => {
@@ -14,6 +18,10 @@ function readLocalFile() {
   })
 }
 
+/**
+ * @description returns log string from S3
+ * @returns {Promise<string>}
+ */
 function readS3File() {
   return getObjectPromise({
     AWS_ACCESS_KEY_ID, 
@@ -25,6 +33,10 @@ function readS3File() {
   }).then(data => data.Body)
 }
 
+/**
+ * @description reads file from s3 on production, otherwise from local
+ * @returns {Promise<string>}
+ */
 function readFile() {
   if (ENV !== 'production') {
     return readLocalFile()
@@ -32,9 +44,7 @@ function readFile() {
   return readS3File()
 }
 
-// For explanations of these,
-// test the match strings at
-// https://regex101.com/
+
 const development = [
   /http:\/\/httpserv/, // allow connections from docker httpserv
   /http:\/\/localhost:[0-9]+$/, // localhost
@@ -50,6 +60,10 @@ const whitelist = {
   production
 }
 
+/**
+ * @description origin match helper for cors configuration for 
+ * development and production environments
+ */
 const matchOrigin = (origin, whitelist = []) => {
   const allowedOrigins = whitelist
   return !!allowedOrigins.filter(allowedOrigin => origin.match(allowedOrigin))[0]

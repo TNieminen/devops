@@ -1,0 +1,417 @@
+# This is an example of a passed deployment process
+
+[0KRunning with gitlab-runner 13.5.0 (ece86343)
+[0;m[0K  on docker-stable j8CYJ51s
+[0;msection_start:1606923693:prepare_executor
+[0K[0K[36;1mPreparing the "docker" executor[0;m
+[0;m[0KUsing Docker executor with image docker:latest ...
+[0;m[0KPulling docker image docker:latest ...
+[0;m[0KUsing docker image sha256:b0757c55a1fdbb59c378fd34dde3e12bd25f68094dd69546cf5ca00ddbaa7a33 for docker:latest with digest docker@sha256:fd4d028713fd05a1fb896412805daed82c4a0cc84331d8dad00cb596d7ce3e3a ...
+[0;msection_end:1606923703:prepare_executor
+[0Ksection_start:1606923703:prepare_script
+[0K[0K[36;1mPreparing environment[0;m
+[0;mRunning on runner-j8cyj51s-project-2-concurrent-0 via gitlab-runner1...
+section_end:1606923705:prepare_script
+[0Ksection_start:1606923705:get_sources
+[0K[0K[36;1mGetting source from Git repository[0;m
+[0;m[32;1mFetching changes with git depth set to 50...[0;m
+Reinitialized existing Git repository in /builds/root/devops/.git/
+[32;1mChecking out fc0e0250 as master...[0;m
+
+[32;1mSkipping Git submodules setup[0;m
+section_end:1606923707:get_sources
+[0Ksection_start:1606923707:step_script
+[0K[0K[36;1mExecuting "step_script" stage of the job script[0;m
+[0;m[32;1m$ apk add curl[0;m
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/main/x86_64/APKINDEX.tar.gz
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/community/x86_64/APKINDEX.tar.gz
+(1/3) Installing nghttp2-libs (1.41.0-r0)
+(2/3) Installing libcurl (7.69.1-r1)
+(3/3) Installing curl (7.69.1-r1)
+Executing busybox-1.31.1-r19.trigger
+OK: 12 MiB in 23 packages
+[32;1m$ apk add bash[0;m
+(1/2) Installing readline (8.0.4-r0)
+(2/2) Installing bash (5.0.17-r0)
+Executing bash-5.0.17-r0.post-install
+Executing busybox-1.31.1-r19.trigger
+OK: 13 MiB in 25 packages
+[32;1m$ apk add --update nodejs npm[0;m
+(1/7) Installing brotli-libs (1.0.9-r1)
+(2/7) Installing c-ares (1.16.1-r0)
+(3/7) Installing libgcc (9.3.0-r2)
+(4/7) Installing libstdc++ (9.3.0-r2)
+(5/7) Installing libuv (1.38.1-r0)
+(6/7) Installing nodejs (12.18.4-r0)
+(7/7) Installing npm (12.18.4-r0)
+Executing busybox-1.31.1-r19.trigger
+OK: 71 MiB in 32 packages
+[32;1m$ curl https://cli-assets.heroku.com/install.sh | sh[0;m
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100  1892  100  1892    0     0   5548      0 --:--:-- --:--:-- --:--:--  5548
+Installing CLI from https://cli-assets.heroku.com/heroku-linux-x64.tar.xz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  1 18.1M    1  195k    0     0   344k      0  0:00:53 --:--:--  0:00:53  343k
+ 11 18.1M   11 2105k    0     0  1339k      0  0:00:13  0:00:01  0:00:12 1338k
+ 21 18.1M   21 4071k    0     0  1556k      0  0:00:11  0:00:02  0:00:09 1556k
+ 51 18.1M   51 9497k    0     0  2661k      0  0:00:06  0:00:03  0:00:03 2661k
+ 96 18.1M   96 17.4M    0     0  3903k      0  0:00:04  0:00:04 --:--:-- 3902k
+100 18.1M  100 18.1M    0     0  3970k      0  0:00:04  0:00:04 --:--:-- 4473k
+bash: line 53: /usr/local/lib/heroku/bin/node: No such file or directory
+heroku installed to /usr/local/bin/heroku
+ ›   Warning: HEROKU_API_KEY set to [REDACTED]
+ ›   Warning: Our terms of service have changed: 
+ ›   https://dashboard.heroku.com/terms-of-service
+heroku/7.47.4 linux-x64 node-v12.18.4
+[32;1m$ docker login --username=_ --password=$(heroku auth:token) registry.heroku.com[0;m
+WARNING! Using --password via the CLI is insecure. Use --password-stdin.
+WARNING! Your password will be stored unencrypted in /root/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+[32;1m$ cd ./vh4/src/httpserv && heroku container:push web -a devops-httpserv[0;m
+=== Building web (/builds/root/devops/vh4/src/httpserv/Dockerfile)
+Sending build context to Docker daemon  145.9kB
+
+Step 1/11 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/11 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/11 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/11 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 0c9dea38c2f6
+Step 5/11 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 7fa0a6f36da5
+Step 6/11 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 6ef5a9f2bb2f
+Step 7/11 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> 1b7a5cb39f8b
+Step 8/11 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> 10218493c39d
+Step 9/11 : VOLUME /home/node/data/
+ ---> Using cache
+ ---> 87c29db48fa5
+Step 10/11 : EXPOSE 8082
+ ---> Using cache
+ ---> c5434ab94dc4
+Step 11/11 : CMD [ "node", "./src/bin/www"]
+ ---> Using cache
+ ---> fe885e47c5a6
+Successfully built fe885e47c5a6
+Successfully tagged registry.heroku.com/devops-httpserv/web:latest
+=== Pushing web (/builds/root/devops/vh4/src/httpserv/Dockerfile)
+The push refers to repository [registry.heroku.com/devops-httpserv/web]
+903201710906: Preparing
+420f0c011fb3: Preparing
+8d79230940e1: Preparing
+d9717e92a01a: Preparing
+c48705bf9d05: Preparing
+bb9a1aa7f0f9: Preparing
+100872442c99: Preparing
+e45d1e66f433: Preparing
+485d92ac3f69: Preparing
+3e207b409db3: Preparing
+e45d1e66f433: Waiting
+485d92ac3f69: Waiting
+bb9a1aa7f0f9: Waiting
+3e207b409db3: Waiting
+100872442c99: Waiting
+420f0c011fb3: Layer already exists
+d9717e92a01a: Layer already exists
+bb9a1aa7f0f9: Layer already exists
+8d79230940e1: Layer already exists
+100872442c99: Layer already exists
+e45d1e66f433: Layer already exists
+485d92ac3f69: Layer already exists
+3e207b409db3: Layer already exists
+c48705bf9d05: Layer already exists
+903201710906: Layer already exists
+latest: digest: sha256:b43bc10af36a3878488bdd6f49c637d7bc066c3d6f549eb0158ce5a98d3f2a77 size: 2408
+Your image has been successfully pushed. You can now release it with the 'container:release' command.
+[32;1m$ heroku container:release web -a devops-httpserv[0;m
+Releasing images web to devops-httpserv... !
+ ▸    The process type web was not updated, because it is already running the
+ ▸    specified docker image.
+Releasing images web to devops-httpserv... done
+[32;1m$ cd .. && cd ./apigateway && heroku container:push web -a devops-apigateway[0;m
+=== Building web (/builds/root/devops/vh4/src/apigateway/Dockerfile)
+Sending build context to Docker daemon  261.1kB
+
+Step 1/11 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/11 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/11 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/11 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 8dcd53777ae7
+Step 5/11 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 3dd08a85718a
+Step 6/11 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 9341a3d54019
+Step 7/11 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> e44d2f0d5770
+Step 8/11 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> bd54bd0c4498
+Step 9/11 : VOLUME /home/node/data/
+ ---> Using cache
+ ---> 7ac72b2d6f3a
+Step 10/11 : EXPOSE 8081
+ ---> Using cache
+ ---> 31526da0d61c
+Step 11/11 : CMD [ "node", "./src/bin/www"]
+ ---> Using cache
+ ---> 42732ef3ad17
+Successfully built 42732ef3ad17
+Successfully tagged registry.heroku.com/devops-apigateway/web:latest
+=== Pushing web (/builds/root/devops/vh4/src/apigateway/Dockerfile)
+The push refers to repository [registry.heroku.com/devops-apigateway/web]
+02a8885c23b2: Preparing
+4ff50a84cdd9: Preparing
+61b596954914: Preparing
+a4c946212e52: Preparing
+207e5afec89e: Preparing
+bb9a1aa7f0f9: Preparing
+100872442c99: Preparing
+e45d1e66f433: Preparing
+485d92ac3f69: Preparing
+3e207b409db3: Preparing
+bb9a1aa7f0f9: Waiting
+485d92ac3f69: Waiting
+3e207b409db3: Waiting
+100872442c99: Waiting
+e45d1e66f433: Waiting
+a4c946212e52: Layer already exists
+61b596954914: Layer already exists
+207e5afec89e: Layer already exists
+4ff50a84cdd9: Layer already exists
+e45d1e66f433: Layer already exists
+100872442c99: Layer already exists
+bb9a1aa7f0f9: Layer already exists
+3e207b409db3: Layer already exists
+02a8885c23b2: Pushed
+485d92ac3f69: Layer already exists
+latest: digest: sha256:2fed382c41d760e469d7a140a4a410af4e4cb5a9f26ca5a8e016f4c846fd6388 size: 2408
+Your image has been successfully pushed. You can now release it with the 'container:release' command.
+[32;1m$ heroku container:release web -a devops-apigateway[0;m
+Releasing images web to devops-apigateway... done
+[32;1m$ cd .. && cd ./obse && heroku container:push worker -a devops-obse[0;m
+=== Building worker (/builds/root/devops/vh4/src/obse/Dockerfile)
+Sending build context to Docker daemon  105.5kB
+
+Step 1/9 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/9 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/9 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/9 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 782bb6de8216
+Step 5/9 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 55c607fcc39a
+Step 6/9 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 8916ec04b3d1
+Step 7/9 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> 351efdc92fd1
+Step 8/9 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> a5b884b59227
+Step 9/9 : CMD [ "node", "./src/index.js"]
+ ---> Using cache
+ ---> d385a916aac6
+Successfully built d385a916aac6
+Successfully tagged registry.heroku.com/devops-obse/worker:latest
+=== Pushing worker (/builds/root/devops/vh4/src/obse/Dockerfile)
+The push refers to repository [registry.heroku.com/devops-obse/worker]
+d66afed1c9ea: Preparing
+63b7c09c2418: Preparing
+4b14f95ff75c: Preparing
+6a9d40333b3d: Preparing
+b7b1d2648303: Preparing
+bb9a1aa7f0f9: Preparing
+100872442c99: Preparing
+e45d1e66f433: Preparing
+485d92ac3f69: Preparing
+3e207b409db3: Preparing
+bb9a1aa7f0f9: Waiting
+e45d1e66f433: Waiting
+100872442c99: Waiting
+485d92ac3f69: Waiting
+63b7c09c2418: Layer already exists
+6a9d40333b3d: Layer already exists
+b7b1d2648303: Layer already exists
+4b14f95ff75c: Layer already exists
+e45d1e66f433: Layer already exists
+d66afed1c9ea: Layer already exists
+485d92ac3f69: Layer already exists
+bb9a1aa7f0f9: Layer already exists
+100872442c99: Layer already exists
+3e207b409db3: Layer already exists
+latest: digest: sha256:8f895b3268a23ee6951e462e49cd4ba13b01be3fa7100ea2c725f5d12a5e7136 size: 2408
+Your image has been successfully pushed. You can now release it with the 'container:release' command.
+[32;1m$ heroku container:release worker -a devops-obse[0;m
+Releasing images worker to devops-obse... !
+ ▸    The process type worker was not updated, because it is already running the
+ ▸    specified docker image.
+Releasing images worker to devops-obse... done
+[32;1m$ cd .. && cd ./imed && heroku container:push worker -a devops-imed[0;m
+=== Building worker (/builds/root/devops/vh4/src/imed/Dockerfile)
+Sending build context to Docker daemon  97.79kB
+
+Step 1/9 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/9 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/9 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/9 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 0052258c5cd8
+Step 5/9 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 91b3488893fb
+Step 6/9 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> b50b6db2f2d4
+Step 7/9 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> 8a4c41801007
+Step 8/9 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> a9ea9c897c3f
+Step 9/9 : CMD [ "node", "./src/index.js"]
+ ---> Using cache
+ ---> c30742549af1
+Successfully built c30742549af1
+Successfully tagged registry.heroku.com/devops-imed/worker:latest
+=== Pushing worker (/builds/root/devops/vh4/src/imed/Dockerfile)
+The push refers to repository [registry.heroku.com/devops-imed/worker]
+333ba964f1bb: Preparing
+4e57bd4a127b: Preparing
+34f34f378506: Preparing
+3023848ee809: Preparing
+b9c4aa181f29: Preparing
+bb9a1aa7f0f9: Preparing
+100872442c99: Preparing
+e45d1e66f433: Preparing
+485d92ac3f69: Preparing
+3e207b409db3: Preparing
+bb9a1aa7f0f9: Waiting
+100872442c99: Waiting
+3e207b409db3: Waiting
+e45d1e66f433: Waiting
+333ba964f1bb: Layer already exists
+3023848ee809: Layer already exists
+bb9a1aa7f0f9: Layer already exists
+e45d1e66f433: Layer already exists
+b9c4aa181f29: Layer already exists
+34f34f378506: Layer already exists
+100872442c99: Layer already exists
+3e207b409db3: Layer already exists
+4e57bd4a127b: Layer already exists
+485d92ac3f69: Layer already exists
+latest: digest: sha256:f338aee8aad1a564e55e22975cec1c691209c0c864a070c7abbc865193961539 size: 2408
+Your image has been successfully pushed. You can now release it with the 'container:release' command.
+[32;1m$ heroku container:release worker -a devops-imed[0;m
+ ▸    The process type worker was not updated, because it is already running the
+ ▸    specified docker image.
+Releasing images worker to devops-imed... done
+[32;1m$ cd .. && cd ./orig && heroku container:push worker -a devops-orig[0;m
+=== Building worker (/builds/root/devops/vh4/src/orig/Dockerfile)
+Sending build context to Docker daemon  102.4kB
+
+Step 1/9 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/9 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/9 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/9 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> c442a7aea991
+Step 5/9 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 85068bad96b4
+Step 6/9 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 151f0dcb781c
+Step 7/9 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> c2b16e11ac58
+Step 8/9 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> c35e36cee69d
+Step 9/9 : CMD [ "node", "./src/index.js"]
+ ---> Using cache
+ ---> 81cd1faaa58c
+Successfully built 81cd1faaa58c
+Successfully tagged registry.heroku.com/devops-orig/worker:latest
+=== Pushing worker (/builds/root/devops/vh4/src/orig/Dockerfile)
+The push refers to repository [registry.heroku.com/devops-orig/worker]
+7a70758fb25f: Preparing
+1e3214cf003a: Preparing
+560ca0213947: Preparing
+82f9f7016496: Preparing
+b629977e5ba3: Preparing
+bb9a1aa7f0f9: Preparing
+100872442c99: Preparing
+e45d1e66f433: Preparing
+485d92ac3f69: Preparing
+3e207b409db3: Preparing
+bb9a1aa7f0f9: Waiting
+485d92ac3f69: Waiting
+100872442c99: Waiting
+e45d1e66f433: Waiting
+3e207b409db3: Waiting
+b629977e5ba3: Layer already exists
+560ca0213947: Layer already exists
+82f9f7016496: Layer already exists
+bb9a1aa7f0f9: Layer already exists
+1e3214cf003a: Layer already exists
+e45d1e66f433: Layer already exists
+100872442c99: Layer already exists
+485d92ac3f69: Layer already exists
+3e207b409db3: Layer already exists
+7a70758fb25f: Pushed
+latest: digest: sha256:6d95c4e7c2b3000b78c4fe6dd72ee703d0ea2a3ed41d12d94d970382da016462 size: 2408
+Your image has been successfully pushed. You can now release it with the 'container:release' command.
+[32;1m$ heroku container:release worker -a devops-orig[0;m
+Releasing images worker to devops-orig... done
+section_end:1606923909:step_script
+[0Ksection_start:1606923910:cleanup_file_variables
+[0K[0K[36;1mCleaning up file based variables[0;m
+[0;msection_end:1606923911:cleanup_file_variables
+[0K[32;1mJob succeeded
+[0;m

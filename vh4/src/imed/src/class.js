@@ -21,12 +21,20 @@ const rabbitConfig = {
 }
 
 module.exports = class Imed {
+  /**
+   * @description class implementation to support receiving and sending messages
+   * outlined in README
+   */
   constructor() {
     this.state = 'RUNNING'    
     this.initQueue()
     this.initListeners()
   }
   
+  /**
+   * @private
+   * @description initializes queue, in test environment we use a mock queue
+   */
   initQueue() {
     if (ENV === 'test') {
       this.queue = queueMock
@@ -36,13 +44,20 @@ module.exports = class Imed {
     }
   }
 
+  /**
+   * @private
+   * @description initialize listeners for messages from queue
+   */
   initListeners() {
     this.queue.on('message',(message) => {
-      console.log('Imed got message', message)
       this.handleMessage(message)
     })
   }
 
+  /**
+   * @private
+   * @description a message handler to route messages based on type
+   */
   handleMessage(message) {
     const {payload} = message
     switch (payload) {
@@ -61,37 +76,56 @@ module.exports = class Imed {
     }
   }
 
+  /**
+   * @private
+   * @description handles shutdown behaviour, namely stop message receiving
+   * and responds back to verify that message was handled
+   * @param {{payload:string, id:number, timestamp:number}} message
+   */
   handleShutdown(message) {
     this.state = 'SHUTDOWN'
     this.stopReceivingTopicMessages()
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
   }
 
+  /**
+   * @private
+   * @description handles init behaviour, namely starts receiving messages, sets state to running
+   * and responds back to verify that message was handled
+   * @param {{payload:string, id:number, timestamp:number}} message
+   */
   handleInit(message) {
     if (this.state === 'RUNNING') {
       return this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
     }
     this.state = 'RUNNING'
-    console.log('Setting service to running at INIT')
     this.startReceivingTopicMessages()
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
   }
   
+  /**
+   * @private
+   * @description handles my.o behaviour, sends a `Got message ${receivedMessage}` to my.i topic
+   * @param {{payload:string, message:string}} message
+   */
   handleMyo(message) {
-    console.log('Handling myo', message)
     setTimeout(() => {
       const sendMessage = `Got message ${message.message}`
       this.queue.publishTopicMessage({message:sendMessage, topic:'my.i'})
     },waitUntilSendMessage)
   }
 
+  /**
+   * @description service starts receiving message again
+   */
   startReceivingTopicMessages() {
-    console.log('Imed started receiving messages')
     this.queue.startReceivingTopicMessages()
   }
   
+  /**
+   * @description service stops receiving messages
+   */
   stopReceivingTopicMessages() {
-    console.log('Imed stopped receiving messages')
     this.queue.stopReceivingTopicMessages()
   }
 }

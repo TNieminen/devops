@@ -24,6 +24,11 @@ app.options('*', cors()) // include before route
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
+
+/**
+ * @description router for GET /
+ * returns a logs string of send and stored messages
+ */
 app.use('/', async(req,res) => {
   try {
     const data = await rootController.getRoot()

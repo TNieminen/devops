@@ -8,6 +8,11 @@ const serverUrl = DOCKER ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = DOCKER ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}?heartbeat=5`
 
+// make queryinterval run faster in test env
+const queryIntervalTime = ENV === 'test' ? 10 : 1000
+const defaultState = 'RUNNING'
+let state = defaultState
+let log = ''
 
 const rabbitConfig = {
   RABBIT_SERVER_URL, 
@@ -32,8 +37,7 @@ else {
 
 /**
  * @description sends control message to queue service with id
- * - if type is set to fanout messages are delivered to all services
- * - if type is set to topic, only services subscribed to that topic receive the message
+ * possible message types include INIT, SHUTDOWN, PAUSE and RUNNING
  */
 async function sendMessage({timestamp, id, payload}) {
   if (!id) {
@@ -51,13 +55,11 @@ async function sendMessage({timestamp, id, payload}) {
 }
 
 
-// make queryinterval run faster in test env
-const queryIntervalTime = ENV === 'test' ? 10 : 1000
-const defaultState = 'RUNNING'
-let state = defaultState
-let log = ''
 
-
+/**
+ * @description in production environment scales HTTPSERV, ORIG, OBSE and IMED
+ * to 1 instance. On development returns
+ */
 async function initService() {
   // on dev there is no need to actually scale containers
   // sending the INIT message will make the services act in INIT & RUNNING mode
@@ -72,6 +74,10 @@ async function initService() {
   return Promise.all(promises)
 }
 
+/**
+ * @description in production environment scales HTTPSERV, ORIG, OBSE and IMED
+ * to 0 instances. On development returns
+ */
 async function stopService() {
   // on dev there is no need to actually scale containers
   // sending stop as a queue message will simulate startup equal to container start
@@ -79,7 +85,6 @@ async function stopService() {
     return
   }
   const promises = []
-  console.log('Stopping service')
   promises.push(heroku.run(['ps:scale', 'web=0', '-a', 'devops-httpserv']))
   promises.push(heroku.run(['ps:scale', 'worker=0', '-a', 'devops-orig']))
   promises.push(heroku.run(['ps:scale', 'worker=0', '-a', 'devops-imed']))
@@ -88,10 +93,14 @@ async function stopService() {
 }
 
 /**
- * @description sends a pause control command to the queue and awaits for the response
+ * @description changes state of the HTTPSERV, IMED, OBSE and ORIG
+ * possible message types include INIT, SHUTDOWN, PAUSE and RUNNING.
+ * Waits for confirmation of receipt before resolving. Returns the originally sent message
+ * back as confirmation.
+ * @param {{timestamp:number, id:number, payload:string}}
+ * @returns {Promise<{timestamp:number, id:number, payload:number}>} 
  */
 async function changeState({timestamp, id, payload}) {
-  // console.log('Sending message', {timestamp, id, payload})
   // if the previous state equals to new state, we return early
   if (state === payload) {
     return {timestamp,payload}
@@ -106,19 +115,19 @@ async function changeState({timestamp, id, payload}) {
   }
   const response = await queryResponse(id)
   if (payload === 'SHUTDOWN') {
-    console.log('Stopping service')
     await stopService()
   }
   return response  
 }
 
 /**
- * @description queries response from state on an interval
+ * @description queries response from state on an interval equal to pre-configured queryInterval.
+ * Returned message is equal to originally sent message.
+ * @returns {Promise<{timestamp:number, id:number, payload:number}>}
  */
 function queryResponse(id) {
   return new Promise((resolve,reject) => {
     const queryInterval = setInterval(() => {
-      // console.log('Querying response to', id)
       try {
         const response = queue.getMessageById(id) 
         if (response) {
@@ -130,10 +139,9 @@ function queryResponse(id) {
             state = response.payload
           }
           // TODO: non SHUTDOWN and INIT messages do not contain valid timestamps
-          // inserting it here will be off my some milliseconds and should be fixed
+          // inserting it here will be off my some milliseconds however should be fixed
           const timestamp = response.timestamp || Date.now()
           log += `${new Date(timestamp).toISOString()} ${response.payload}\n`
-          console.log('Received response', response)
           resolve(response)
         }
       }
@@ -146,12 +154,17 @@ function queryResponse(id) {
 }
 
 
+/**
+ * @description gets the current state
+ * @returns {string}
+ */
 function getState() {
   return state
 }
 
 /**
  * @description sets the state into initial condition
+ * @returns {string}
  */
 function clearState() {
   state = defaultState
@@ -167,6 +180,7 @@ function clearLog() {
 
 /**
  * @description returns log string
+ * @returns {string}
  */
 function getLog() {
   return log

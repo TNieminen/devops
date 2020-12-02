@@ -1,5 +1,10 @@
 # General
-Implement an APIgateway service that provides the external interface to the system. This service should be exposed from port 8081. The API gateway should provide the following REST-like API 
+
+Implements an API service to control IMED, ORIG and OBSE workers and HTTPSERV api. On initialization the service is set to Running state and sending requests to it is safe
+against booting up background services because of promise based messaging.
+
+The service implements these functions:
+
 
 **GET /messages**
 
@@ -29,9 +34,25 @@ Example output:
 Return core statistics (the five (5) most important in your mind) of the RabbitMQ. (For getting the information see https://www.rabbitmq.com/monitoring.html)Output should syntactically correct and intuitive JSON. E.g:{ “fd_used”: 5, ...}GET /queue-statistic (optional)Return a JSON array per your queue. For each queue return “message delivery rate”, “messages publishing rate”, “messages delivered recently”, “message published lately”. (For gettingthe information see https://www.rabbitmq.com/monitoring.html)Modify the ORIG service to send messages forever untilpause pausedor stopped.Implement acopy of the OBSE process
 
 
-## NOTES
+you can call these endpoints for instance with:
 
-// https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams
-// response.body returns a readable stream
-// but we can use the text method to parse it
-// https://developer.mozilla.org/en-US/docs/Web/API/Streams_API/Using_readable_streams
+*You can put the service in SHUTDOWN state with*
+`curl -X PUT localhost:8081/state?payload=SHUTDOWN`
+
+*You can put the service in INIT state with*
+`curl -X PUT localhost:8081/state?payload=INIT`
+
+*You can put the service in PAUSE state with*
+`curl -X PUT localhost:8081/state?payload=PAUSE`
+
+*You can put the service in RUNNING state with*
+`curl -X PUT localhost:8081/state?payload=SHUTDOWN`
+
+*You can get the state of the service with*
+`curl localhost:8081/state`
+
+*You can get a timestamped log of state changes with*
+`curl localhost:8081/run-log`
+
+*You can get a log of messages sent (and stored by obse) with*
+`curl localhost:8081/messages`

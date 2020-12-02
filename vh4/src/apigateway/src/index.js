@@ -18,6 +18,11 @@ app.use(express.urlencoded({extended: false}))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
+
+/**
+ * @description router for GET /messages
+ * see README.md for more details
+ */
 messagesRouter.get('/',async(req,res,next) => {
   try {
     const response = await messagesController.getMessages()
@@ -28,6 +33,10 @@ messagesRouter.get('/',async(req,res,next) => {
   }
 })
 
+/**
+ * @description router for PUT /state
+ * see README.md for more details
+ */
 stateRouter.put('/',async(req,res,next) => {
   try {
     const timestamp = Date.now()
@@ -44,6 +53,10 @@ stateRouter.put('/',async(req,res,next) => {
   }
 })
 
+/**
+ * @description router for GET /state
+ * see README.md for more details
+ */
 stateRouter.get('/',async(req,res,next) => {
   try {
     const response = await stateController.getState()
@@ -54,6 +67,10 @@ stateRouter.get('/',async(req,res,next) => {
   }
 })
 
+/**
+ * @description router for GET /run-log
+ * see README.md for more details
+ */
 logRouter.get('/',async(req,res,next) => {
   try {
     const response = await stateController.getLog()
@@ -64,7 +81,7 @@ logRouter.get('/',async(req,res,next) => {
   }
 })
 
-
+// attach routes
 app.use('/messages',messagesRouter)
 app.use('/state', stateRouter)
 app.use('/run-log', logRouter)

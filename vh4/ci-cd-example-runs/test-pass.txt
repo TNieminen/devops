@@ -1,0 +1,501 @@
+This is an example of passed tests
+
+[0KRunning with gitlab-runner 13.5.0 (ece86343)
+[0;m[0K  on docker-stable j8CYJ51s
+[0;msection_start:1606923615:prepare_executor
+[0K[0K[36;1mPreparing the "docker" executor[0;m
+[0;m[0KUsing Docker executor with image docker:latest ...
+[0;m[0KPulling docker image docker:latest ...
+[0;m[0KUsing docker image sha256:b0757c55a1fdbb59c378fd34dde3e12bd25f68094dd69546cf5ca00ddbaa7a33 for docker:latest with digest docker@sha256:fd4d028713fd05a1fb896412805daed82c4a0cc84331d8dad00cb596d7ce3e3a ...
+[0;msection_end:1606923628:prepare_executor
+[0Ksection_start:1606923628:prepare_script
+[0K[0K[36;1mPreparing environment[0;m
+[0;mRunning on runner-j8cyj51s-project-2-concurrent-0 via gitlab-runner1...
+section_end:1606923630:prepare_script
+[0Ksection_start:1606923630:get_sources
+[0K[0K[36;1mGetting source from Git repository[0;m
+[0;m[32;1mFetching changes with git depth set to 50...[0;m
+Reinitialized existing Git repository in /builds/root/devops/.git/
+[32;1mChecking out fc0e0250 as master...[0;m
+
+[32;1mSkipping Git submodules setup[0;m
+section_end:1606923632:get_sources
+[0Ksection_start:1606923632:step_script
+[0K[0K[36;1mExecuting "step_script" stage of the job script[0;m
+[0;m[32;1m$ apk add curl[0;m
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/main/x86_64/APKINDEX.tar.gz
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/community/x86_64/APKINDEX.tar.gz
+(1/3) Installing nghttp2-libs (1.41.0-r0)
+(2/3) Installing libcurl (7.69.1-r1)
+(3/3) Installing curl (7.69.1-r1)
+Executing busybox-1.31.1-r19.trigger
+OK: 12 MiB in 23 packages
+[32;1m$ apk add bash[0;m
+(1/2) Installing readline (8.0.4-r0)
+(2/2) Installing bash (5.0.17-r0)
+Executing bash-5.0.17-r0.post-install
+Executing busybox-1.31.1-r19.trigger
+OK: 13 MiB in 25 packages
+[32;1m$ apk add --update nodejs npm[0;m
+(1/7) Installing brotli-libs (1.0.9-r1)
+(2/7) Installing c-ares (1.16.1-r0)
+(3/7) Installing libgcc (9.3.0-r2)
+(4/7) Installing libstdc++ (9.3.0-r2)
+(5/7) Installing libuv (1.38.1-r0)
+(6/7) Installing nodejs (12.18.4-r0)
+(7/7) Installing npm (12.18.4-r0)
+Executing busybox-1.31.1-r19.trigger
+OK: 71 MiB in 32 packages
+[32;1m$ npm install -g yarn[0;m
+
+> yarn@1.22.10 preinstall /usr/lib/node_modules/yarn
+> :; (node ./preinstall.js > /dev/null 2>&1 || true)
+
+/usr/bin/yarn -> /usr/lib/node_modules/yarn/bin/yarn.js
+/usr/bin/yarnpkg -> /usr/lib/node_modules/yarn/bin/yarn.js
++ yarn@1.22.10
+added 1 package in 11.247s
+[32;1m$ cd ./vh4[0;m
+[32;1m$ yarn test-httpserv[0;m
+yarn run v1.22.10
+$ cd ./src/httpserv && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag httpserv .
+Sending build context to Docker daemon  145.9kB
+
+Step 1/11 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/11 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/11 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/11 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 0c9dea38c2f6
+Step 5/11 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 7fa0a6f36da5
+Step 6/11 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 6ef5a9f2bb2f
+Step 7/11 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> 1b7a5cb39f8b
+Step 8/11 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> 10218493c39d
+Step 9/11 : VOLUME /home/node/data/
+ ---> Using cache
+ ---> 87c29db48fa5
+Step 10/11 : EXPOSE 8082
+ ---> Using cache
+ ---> c5434ab94dc4
+Step 11/11 : CMD [ "node", "./src/bin/www"]
+ ---> Using cache
+ ---> fe885e47c5a6
+Successfully built fe885e47c5a6
+Successfully tagged httpserv:latest
+$ docker run httpserv /bin/ash -c 'yarn test'
+yarn run v1.22.5
+$ NODE_ENV=test nyc mocha
+
+
+  ===== HTTPSERV Root Controller - Unit Tests =====
+    ✓ Should return correct string return
+    ✓ Should return error status 404 on ENOENT
+    ✓ Should return error status 404 on NoSuchKey
+    ✓ Should throw error when error is not to do with file found
+
+  ===== HTTPSERV Integration tests =====
+    ✓ Should pass
+
+
+  5 passing (12ms)
+
+----------------------|---------|----------|---------|---------|----------------------
+File                  | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s    
+----------------------|---------|----------|---------|---------|----------------------
+All files             |   76.47 |    19.05 |   45.45 |   77.23 |                      
+ src                  |    61.9 |        0 |   14.29 |    62.9 |                      
+  index.js            |   66.67 |        0 |       0 |   66.67 | 19-20,28-33,39,45-50 
+  test.js             |     100 |      100 |     100 |     100 |                      
+  utils.js            |   40.91 |        0 |       0 |   42.86 | 7-32,54-55           
+ src/controllers/root |     100 |      100 |     100 |     100 |                      
+  index.js            |     100 |      100 |     100 |     100 |                      
+  test.js             |     100 |      100 |     100 |     100 |                      
+----------------------|---------|----------|---------|---------|----------------------
+Done in 2.83s.
+Done in 6.93s.
+[32;1m$ yarn test-apigateway[0;m
+yarn run v1.22.10
+$ cd ./src/apigateway && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag apigateway .
+Sending build context to Docker daemon  261.1kB
+
+Step 1/11 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/11 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/11 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/11 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 8dcd53777ae7
+Step 5/11 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 3dd08a85718a
+Step 6/11 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 9341a3d54019
+Step 7/11 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> e44d2f0d5770
+Step 8/11 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> bd54bd0c4498
+Step 9/11 : VOLUME /home/node/data/
+ ---> Running in d7758fdce4ef
+Removing intermediate container d7758fdce4ef
+ ---> 7ac72b2d6f3a
+Step 10/11 : EXPOSE 8081
+ ---> Running in 52158c78aa6f
+Removing intermediate container 52158c78aa6f
+ ---> 31526da0d61c
+Step 11/11 : CMD [ "node", "./src/bin/www"]
+ ---> Running in c2bce421b687
+Removing intermediate container c2bce421b687
+ ---> 42732ef3ad17
+Successfully built 42732ef3ad17
+Successfully tagged apigateway:latest
+$ docker run apigateway /bin/ash -c 'yarn test'
+yarn run v1.22.5
+$ ENV=test nyc mocha
+
+
+  ===== APIGATEWAY Messages Controller - Unit Tests =====
+    ✓ Should return text parsed response on success
+    ✓ Should throw error on a failed response
+
+  ===== APIGATEWAY State Controller - Unit Tests =====
+    ==== PUT ====
+Received response { payload: 'PAUSE', timestamp: 1606923673131 }
+      ✓ Should PAUSE the service successfully
+      ✓ Should set the service to RUNNING successfully
+Received response { payload: 'SHUTDOWN', timestamp: 1606923673147 }
+Stopping service
+      ✓ Should set the service to SHUTDOWN successfully
+      ✓ Should set the service to INIT successfully
+      ✓ Should reject if payload is not defined
+      ✓ Should reject if id is not defined
+      ✓ Should reject if timestamp is not defined
+      - Should reject because response was not received in time
+    ==== GET ====
+      /state
+        ✓ Should return shutdown state if we have no state information set
+Received response { payload: 'SHUTDOWN', timestamp: 1606923673163 }
+Stopping service
+        ✓ Should return new state after update
+      /run-log
+Received response { payload: 'SHUTDOWN', timestamp: 1606923673177 }
+Stopping service
+        ✓ Should return a log when it exists
+        - Should append to, not replace, old log
+        ✓ Should return empty string if no log exists
+    ==== sendMessage ====
+      ✓ Should send RUNNING message successfully
+      ✓ Should throw error if id is not defined
+      ✓ Should throw error if payload is not defined
+      ✓ Should throw error if timestamp is not valid
+
+  ===== API Gateway =====
+    ✓ should pass
+
+
+  18 passing (92ms)
+  2 pending
+
+--------------------------|---------|----------|---------|---------|--------------------------------
+File                      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s              
+--------------------------|---------|----------|---------|---------|--------------------------------
+All files                 |   80.23 |     61.9 |   85.45 |   80.16 |                                
+ src                      |   62.12 |       25 |   33.33 |   62.12 |                                
+  index.js                |   51.92 |        0 |       0 |   51.92 | ...,32-43,48-53,58-63,74,79-82 
+  test.js                 |     100 |      100 |     100 |     100 |                                
+  utils.js                |     100 |      100 |     100 |     100 |                                
+ src/controllers/messages |     100 |       50 |     100 |     100 |                                
+  index.js                |     100 |       50 |     100 |     100 | 5                              
+  test.js                 |     100 |      100 |     100 |     100 |                                
+ src/controllers/state    |   84.34 |    71.88 |   94.59 |   84.34 |                                
+  index.js                |   77.33 |    71.88 |     100 |   77.33 | 29,67-72,81-87,127,141-142     
+  test.js                 |   90.11 |      100 |   92.31 |   90.11 | 109-117                        
+--------------------------|---------|----------|---------|---------|--------------------------------
+Done in 2.73s.
+Done in 6.55s.
+[32;1m$ yarn test-imed[0;m
+yarn run v1.22.10
+$ cd ./src/imed && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag imed .
+Sending build context to Docker daemon  97.79kB
+
+Step 1/9 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/9 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/9 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/9 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 0052258c5cd8
+Step 5/9 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 91b3488893fb
+Step 6/9 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> b50b6db2f2d4
+Step 7/9 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> 8a4c41801007
+Step 8/9 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> a9ea9c897c3f
+Step 9/9 : CMD [ "node", "./src/index.js"]
+ ---> Using cache
+ ---> c30742549af1
+Successfully built c30742549af1
+Successfully tagged imed:latest
+$ docker run imed /bin/ash -c 'yarn test'
+yarn run v1.22.5
+$ ENV=test nyc mocha
+
+
+  ===== IMED =====
+    ==== constructor ====
+      ✓ Should create a new instance without errors
+      ✓ Should set default state to be RUNNING
+    ==== initQueue ====
+      ✓ Should return mock queue implementation in test env
+    ==== messaging ====
+Imed got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+Imed got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+Imed got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+Imed got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+Imed got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+      ✓ Should handle a message sent from the queue
+Imed stopped receiving messages
+      ✓ Should handle a SHUTDOWN sent from the queue
+      ✓ Should keep receiving messages in RUNNING state after INIT sent from the queue
+Imed stopped receiving messages
+Setting service to running at INIT
+Imed started receiving messages
+      ✓ Should start receiving messages after INIT sent from the queue
+Handling myo { payload: 'my.o', message: 'test-message' }
+      ✓ Should send a my.i message on a received my.o message
+
+
+  8 passing (36ms)
+
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------|---------|----------|---------|---------|-------------------
+All files |   99.06 |       75 |     100 |   99.05 |                   
+ class.js |   97.92 |       75 |     100 |   97.92 | 35                
+ test.js  |     100 |      100 |     100 |     100 |                   
+----------|---------|----------|---------|---------|-------------------
+Done in 2.18s.
+Done in 4.21s.
+[32;1m$ yarn test-obse[0;m
+yarn run v1.22.10
+$ cd ./src/obse && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag obse .
+Sending build context to Docker daemon  105.5kB
+
+Step 1/9 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/9 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/9 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/9 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> 782bb6de8216
+Step 5/9 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 55c607fcc39a
+Step 6/9 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 8916ec04b3d1
+Step 7/9 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> 351efdc92fd1
+Step 8/9 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> Using cache
+ ---> a5b884b59227
+Step 9/9 : CMD [ "node", "./src/index.js"]
+ ---> Using cache
+ ---> d385a916aac6
+Successfully built d385a916aac6
+Successfully tagged obse:latest
+$ docker run obse /bin/ash -c 'yarn test'
+yarn run v1.22.5
+$ ENV=test nyc mocha
+
+
+  ===== OBSE =====
+    ==== constructor ====
+      ✓ Should create a new instance without errors
+      ✓ Should set default state to be RUNNING
+    ==== initQueue ====
+      ✓ Should return mock queue implementation in test env
+    ==== messaging ====
+Obse got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+Obse got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+Obse got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+Obse got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+Obse got message { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+      ✓ Should handle a message sent from the queue
+Obse stopping receiving messages
+      ✓ Should handle a SHUTDOWN sent from the queue
+      ✓ Should keep receiving messages in RUNNING state after INIT sent from the queue
+Obse stopping receiving messages
+Setting service to running at INIT
+Obse starting receiving messages
+      ✓ Should start receiving messages after INIT sent from the queue
+Handling my { payload: 'my.o', message: 'test-message' }
+      ✓ Should handle a my.o message sent from the queue
+Handling my { payload: 'my.i', message: 'test-message' }
+      ✓ Should handle a my.j message sent from the queue
+
+
+  9 passing (17ms)
+
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------|---------|----------|---------|---------|-------------------
+All files |   83.22 |    45.16 |   75.68 |   83.11 |                   
+ class.js |   98.04 |       80 |     100 |   98.04 | 41                
+ test.js  |     100 |      100 |     100 |     100 |                   
+ utils.js |      25 |     12.5 |   18.18 |      25 | 8-58,74-77,84-87  
+----------|---------|----------|---------|---------|-------------------
+Done in 2.10s.
+Done in 4.11s.
+[32;1m$ yarn test-orig[0;m
+yarn run v1.22.10
+$ cd ./src/orig && yarn build && yarn docker-test
+$ docker build -f Dockerfile --tag orig .
+Sending build context to Docker daemon  102.4kB
+
+Step 1/9 : FROM node:12-alpine
+ ---> d8b74300d554
+Step 2/9 : RUN mkdir /home/node/app/ && chown -R node:node /home/node/app
+ ---> Using cache
+ ---> b4e36c2f247d
+Step 3/9 : WORKDIR /home/node/app
+ ---> Using cache
+ ---> 188fad09ae5b
+Step 4/9 : COPY --chown=node:node package.json yarn.lock /home/node/app/
+ ---> Using cache
+ ---> c442a7aea991
+Step 5/9 : RUN yarn install --frozen-lockfile
+ ---> Using cache
+ ---> 85068bad96b4
+Step 6/9 : COPY --chown=node:node ./.env.defaults /home/node/app/
+ ---> Using cache
+ ---> 151f0dcb781c
+Step 7/9 : COPY --chown=node:node ./.mocharc.js /home/node/app/
+ ---> Using cache
+ ---> c2b16e11ac58
+Step 8/9 : COPY --chown=node:node ./src/ /home/node/app/src/
+ ---> c35e36cee69d
+Step 9/9 : CMD [ "node", "./src/index.js"]
+ ---> Running in bf4c86c9c1d3
+Removing intermediate container bf4c86c9c1d3
+ ---> 81cd1faaa58c
+Successfully built 81cd1faaa58c
+Successfully tagged orig:latest
+$ docker run orig /bin/ash -c 'yarn test'
+yarn run v1.22.5
+$ ENV=test nyc mocha
+
+
+  ===== ORIG =====
+    ==== constructor ====
+      ✓ Should create a new instance without errors
+      ✓ Should set default state to be RUNNING
+    ==== initQueue ====
+      ✓ Should return mock queue implementation in test env
+    ==== messaging ====
+HANDLE MSSAGE { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+HANDLE MSSAGE { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+HANDLE MSSAGE { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+HANDLE MSSAGE { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+HANDLE MSSAGE { id: 1, payload: 'TEST', timestamp: 1 }
+Received message without handler { id: 1, payload: 'TEST', timestamp: 1 }
+      ✓ Should handle a message sent from the queue
+HANDLE MSSAGE { id: 1, payload: 'SHUTDOWN', timestamp: 1 }
+      ✓ Should handle a SHUTDOWN sent from the queue
+HANDLE MSSAGE { id: 1, payload: 'INIT', timestamp: 1 }
+      ✓ Should keep sending messages in RUNNING state after INIT sent from the queue (103ms)
+HANDLE MSSAGE { id: 1, payload: 'INIT', timestamp: 1 }
+Setting service to running at INIT
+      ✓ Should start sending messages after INIT sent from the queue (104ms)
+(node:38) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 message listeners added to [EventEmitter]. Use emitter.setMaxListeners() to increase limit
+HANDLE MSSAGE { id: 1, payload: 'RUNNING', timestamp: 1 }
+Setting service state to RUNNING
+      ✓ Should start sending messages after RUNNING sent from the queue (105ms)
+HANDLE MSSAGE { id: 1, payload: 'RUNNING', timestamp: 1 }
+Error: Cannot set to running when shutdown
+SENDING ERROR RES {
+  id: 1,
+  payload: 'RUNNING',
+  timestamp: 1,
+  error: 'Error: Cannot set to running when shutdown'
+}
+      ✓ Should return error after RUNNING sent from the queue if state is SHUTDOWN (203ms)
+HANDLE MSSAGE { id: 1, payload: 'PAUSE', timestamp: 1 }
+Setting service state to PAUSE
+      ✓ Should pause sending messages after PAUSE sent from the queue (103ms)
+HANDLE MSSAGE { id: 1, payload: 'PAUSE', timestamp: 1 }
+Error: Cannot pause when shutdown
+      ✓ Should fail to pause when state is shutdown after PAUSE sent from the queue (103ms)
+      ✓ Should start sending messages on init
+      ✓ Should stop sending messages (201ms)
+      ✓ Should start sending messages after stopping (103ms)
+
+
+  14 passing (1s)
+
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------|---------|----------|---------|---------|-------------------
+All files |   98.44 |    80.77 |     100 |   98.43 |                   
+ class.js |   95.83 |    80.77 |     100 |   95.83 | 44,126-127        
+ test.js  |     100 |      100 |     100 |     100 |                   
+----------|---------|----------|---------|---------|-------------------
+Done in 3.09s.
+Done in 5.66s.
+section_end:1606923688:step_script
+[0Ksection_start:1606923688:cleanup_file_variables
+[0K[0K[36;1mCleaning up file based variables[0;m
+[0;msection_end:1606923690:cleanup_file_variables
+[0K[32;1mJob succeeded
+[0;m

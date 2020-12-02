@@ -19,6 +19,7 @@
     "expect": "^26.6.2",
     "express": "~4.16.1",
     "fetch-mock": "^9.11.0",
+    "heroku": "^7.47.4",
     "http-errors": "~1.6.3",
     "mocha": "^8.2.1",
     "morgan": "~1.9.1",

@@ -2,11 +2,13 @@ require('dotenv-defaults').config()
 const Queue = require('@badgrhammer/rabbitmq-helpers')
 const queueMock = require('@badgrhammer/rabbitmq-helpers/src/mock')
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, DOCKER, LOGLEVEL} = process.env
+const heroku = require('heroku')
 
 const serverUrl = DOCKER ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = DOCKER ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}?heartbeat=5`
-    
+
+
 const rabbitConfig = {
   RABBIT_SERVER_URL, 
   RABBIT_SERVER_PORT,
@@ -62,7 +64,12 @@ async function initService() {
   if (ENV !== 'production') {
     return
   }
-  
+  const promises = []
+  promises.push(heroku.run(['ps:scale', 'web=1', '-a', 'devops-httpserv']))
+  promises.push(heroku.run(['ps:scale', 'worker=1', '-a', 'devops-orig']))
+  promises.push(heroku.run(['ps:scale', 'worker=1', '-a', 'devops-imed']))
+  promises.push(heroku.run(['ps:scale', 'worker=1', '-a', 'devops-obse']))
+  return Promise.all(promises)
 }
 
 async function stopService() {
@@ -71,6 +78,13 @@ async function stopService() {
   if (ENV !== 'production') {
     return
   }
+  const promises = []
+  console.log('Stopping service')
+  promises.push(heroku.run(['ps:scale', 'web=0', '-a', 'devops-httpserv']))
+  promises.push(heroku.run(['ps:scale', 'worker=0', '-a', 'devops-orig']))
+  promises.push(heroku.run(['ps:scale', 'worker=0', '-a', 'devops-imed']))
+  promises.push(heroku.run(['ps:scale', 'worker=0', '-a', 'devops-obse']))
+  return Promise.all(promises)
 }
 
 /**
@@ -88,6 +102,7 @@ async function changeState({timestamp, id, payload}) {
     await initService()
   }
   if (payload === 'SHUTDOWN') {
+    console.log('Stopping service')
     await stopService()
   }
   return response  
@@ -104,7 +119,12 @@ function queryResponse(id) {
         const response = queue.getMessageById(id) 
         if (response) {
           clearInterval(queryInterval)
-          state = response.payload
+          if (response.payload === 'INIT') {
+            state = 'RUNNING'
+          }
+          else {
+            state = response.payload
+          }
           log += `${new Date(response.timestamp).toISOString()} ${response.payload}\n`
           console.log('Received response', response)
           resolve(response)

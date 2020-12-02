@@ -373,7 +373,7 @@ notice that the service managing HTTP calls needs to be called Dockerfile.web to
 - [ ] Add tests
 - [ ] Add shutdown and init methods for production
 - [ ] Write test report
-- [ ] 
+  
 # TODO
 - [ ] And hot code reloading to all scripts
 - [ ] Allow development without a Docker environment

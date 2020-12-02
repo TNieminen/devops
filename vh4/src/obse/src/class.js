@@ -23,11 +23,16 @@ const rabbitConfig = {
 
 module.exports = class Obse {
   constructor() {
+    this.init()
+  }
+
+  async init() {
+    await fs.deleteFile()
     this.initQueue()
     this.initListeners()
     this.state = 'RUNNING'
   }
-
+  
   async initQueue() {
     if (ENV === 'test') {
       this.queue = queueMock

@@ -1,87 +1,250 @@
+- [Instructions for examiner](#instructions-for-examiner)
 - [Description](#description)
+  - [Implemented project requirements](#implemented-project-requirements)
 - [Getting started](#getting-started)
+  - [Requirements](#requirements)
   - [Running the project](#running-the-project)
   - [Project structure](#project-structure)
   - [Development](#development)
-- [Learnings and reflection](#learnings-and-reflection)
-  - [Notes on docker](#notes-on-docker)
-    - [Up & Down](#up--down)
-    - [On volumes](#on-volumes)
-    - [Useful commands](#useful-commands)
-    - [Sources](#sources)
-  - [RabbitMQ](#rabbitmq)
-    - [Publisher](#publisher)
-    - [Consumer](#consumer)
-    - [Queue](#queue)
-    - [Receiving messages](#receiving-messages)
-    - [Sending messages](#sending-messages)
-    - [Publishing a message](#publishing-a-message)
-    - [Exchange](#exchange)
-      - [Fanout](#fanout)
-      - [Direct](#direct)
-    - [Topic](#topic)
-    - [Sources](#sources-1)
-- [Working with multiple git remotes](#working-with-multiple-git-remotes)
-- [Heroku multi-container deployment](#heroku-multi-container-deployment)
+    - [Non Docker Development](#non-docker-development)
+    - [Docker based development](#docker-based-development)
+    - [Testing](#testing)
+      - [Example runs](#example-runs)
+- [Deployment](#deployment)
   - [Steps of deploying to Heroku container service for multiple images](#steps-of-deploying-to-heroku-container-service-for-multiple-images)
-  - [Notes for implementation](#notes-for-implementation)
-- [NEXT UP](#next-up)
+- [Learnings and reflection](#learnings-and-reflection)
+- [Amount of effort](#amount-of-effort)
+- [Notes on docker](#notes-on-docker)
+  - [Up & Down](#up--down)
+  - [On volumes](#on-volumes)
+  - [Useful commands](#useful-commands)
+  - [Sources](#sources)
+- [RabbitMQ](#rabbitmq)
+  - [Publisher](#publisher)
+  - [Consumer](#consumer)
+  - [Queue](#queue)
+  - [Receiving messages](#receiving-messages)
+  - [Sending messages](#sending-messages)
+  - [Publishing a message](#publishing-a-message)
+  - [Exchange](#exchange)
+    - [Fanout](#fanout)
+    - [Direct](#direct)
+  - [Topic](#topic)
+  - [Sources](#sources-1)
+- [Working with multiple git remotes](#working-with-multiple-git-remotes)
 - [TODO](#todo)
+
+# Instructions for examiner
+
 
 # Description
 *Original project outline can be found in the attached assignment.pdf document*
 
-The goal of this repository is to implement message routing with topics named as
-- my.o
-- my.i
-using Docker.
+The goal of this solo-developed project is to implement a service which utilizes RabbitMQ to communicate messages between worker threads with two REST API ends points which control the state of the system and return information from it.
+The application is running on Heroku and is backed by a CI/CD pipeline
+running on a local instance of Gitlab.
 
-Functionality
+Component-wise breakdown:
+
+**ORIG**
+- Sends messages on a loop 3 seconds apart in topic my.o
+- Possible messages sent by the service include
+  - MSG_1
+  - MSG_2
+  - MSG_3
+- Service can be in states
+  - PAUSED - messages stop sending
+  - RUNNING - messages start sending again
+  - SHUTDOWN - in dev stops sending messages, in production container is scaled down
+  - INIT - container is starting up, will start delivering messages when started. State automatically set to RUNNING
 
 **IMED(Intermediate)**
-- Subscribes for messages from my.o
-- Publishes message to my.io
+- Subscribes for messages from my.o (sent by orig)
+- Publishes message to my.i
+- Possible message combinations include (depending on orig input)
+  - Got MSG_1
+  - Got MSG_2
+  - Got MSG_3
+- Service can be in states
+  - SHUTDOWN - messages are no longer received
+  - INIT - messages can be received again
   
 **OBSE(Observer)**
 - Subscribes for all messages within the network, therefore receiving from both my.o and my.i
 - Stores the messages into a file
+- Examples of possible messages saved by the service include
+  - 2020-11-01T06:35:01.373Z MSG_1
+  - 2020-11-01T06:36:02.373Z GOT MSG_1 
+    - Timestamps are ISO typestamps
+    - All IMED and ORIG message types are covered in similar fashion
+- Service can be in states
+  - SHUTDOWN - messages are no longer received
+  - INIT - messages can be received again
 
 **HTTPSERV**
 - When requested, returns content of the file created by OBSE
-  
-Additional notes
-- The project uses RabbitMQ as the message broker
+- Service can be in states
+  - SHUTDOWN - REST API is not responsive
+  - INIT - REST API is up
+- On local development the service is accessible via `http://localhost:8082`
+  - 8082 was set as the port so as to not conflict with local Gitlab runtime
 
+**APIGATEWAY**
+- Implements an API service to control IMED, ORIG and OBSE workers and HTTPSERV api
+- Communicates with ORIG via special control messages
+- Service can be only in RUNNING state, because otherwise it could not INIT other services. In effect it is always on and serves as the main gateway to the service
+  - RUNNING - can send commands to other services and query them
+  
+**Gitlab**
+- The repository includes a local Gitlab runtime, which can be found outside vh4 folder in root `./gitlab-ci`
+- You can start the service with `docker-compose up --build` in it's folder
+- You can register a runtime for test execution by running `gitlab-runner-register.sh` executable
+- Information on how to setup multiple git remotes can be found in section [Working with multiple git remotes](#working-with-multiple-git-remotes)
+- Adding authentication and working with git in general is assumed to be common knowledge and not outlined here
+- The deployment and testing procedures are outlined in repository root at `gitlab-ci.yml`
+- In order to deploy to Heroku you need to define `HEROKU_API_KEY` in the Gitlab CI/CD settings and this key should be requested separately from the maintainer
+
+## Implemented project requirements
+Requirements are outlined in the assignment document and project root
+
+- [x] Install the pipeline infrastructure using gitlab-ci
+- [x] Create, setup and test an automatic testing framework
+- [x] Implements changes to the system by using the pipeline. The development should be done in test-driven manner. Further notes on this in section [Testing](#testing)
+- [x] implement a static analysis step in the pipeline by using tools like jlint, pylint or SonarQube. This is implemented with Eslint in repository root.
+- [x] Deploy the application at least to your own machine. Done via deployment to Heroku container service, outlined in detail in section [Deployment](#deployment)
+- [ ] Implement monitoring and logging for troubleshooting. Not implemented because of time limitations. However services log to console which is accessible via `heroku logs --tail -a application-name`
+- [x] Provide an end report. This is available in repository root (not project root) with the name `EndReport.pdf`, which is effectively an export of this Markdown file.
 
 # Getting started
+
+## Requirements
+
+- [Docker runtime](https://www.docker.com/get-started)
+- [Node.js](https://nodejs.org/en/)
+- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) if you want to deploy manually and not through the CI/CD pipeline. Note that this requires authentication that can be requested from the maintainer
+- [Yarn](https://yarnpkg.com/getting-started)
+- A browser, Curl, Postman or similar for communicating with the service
+- An internet connection :)
 
 ## Running the project
 
 `docker-compose up --build`
 
-you should be able to get the system output served by httpserv module at
+Once the service is healthy, it can start receiving messages. Once apigateway is up, methods
+can be called. The service will automatically be set to RUNNING mode and messages will be sent.
 
-`curl localhost:8080`
+*You can put the service in SHUTDOWN state with*
+`curl -X PUT localhost:8081/state?payload=SHUTDOWN`
+
+*You can put the service in INIT state with*
+`curl -X PUT localhost:8081/state?payload=INIT`
+
+*You can put the service in PAUSE state with*
+`curl -X PUT localhost:8081/state?payload=PAUSE`
+
+*You can put the service in RUNNING state with*
+`curl -X PUT localhost:8081/state?payload=SHUTDOWN`
+
+*You can get the state of the service with*
+`curl localhost:8081/state`
+
+*You can get a timestamped log of state changes with*
+`curl localhost:8081/run-log`
+
+*You can get a log of messages sent (and stored by obse) with*
+`curl localhost:8081/messages`
+
+**Note that SHUTDOWN will clear messages sent and stored by the service!**
 
 ## Project structure
 
-The project is split into self contained micro services with their of package.json and dependency management.
-This way they can change independently from each other. This is a bit inconvenient because we need
-to run yarn or npm install separately in each package. However this is not needed when development happens in the Docker
-environment.
+The project is split into self contained micro services with their of package.json and dependency management. Each is it's own container and deployed to a separate
+Heroku instance. Local development is orchestrated via docker-compose
 
-- Root includes assigment.pdf which includes detailed instructions on the project and our docker-compose config file
+This way they can change independently from each other. This is a bit inconvenient because we need to run yarn or npm install separately in each package. However this is not needed when development happens in the Docker environment.
+
+- project root includes assigment.pdf which includes detailed instructions on the project and our docker-compose config file
 - Each aforementioned module is listed under source with their own package.json, env, README and so on
+- static code analysis is done via Eslint which is shared from repository root
+
+In addition to services mentioned in the description, there are two additional utility packages:
+
+**rabbitmq-helpers**
+- Implements a queue wrapper to send and consume both fanout and topic based messages
+- This package is found in `./src/rabbitmq` and is published as a public npm module
+- You can create updates to the service in the folder and distribute them via `npm publish`. In versioning we follow the [Semver](https://semver.org/) convention.
+
+**s3**
+- Implements methods to upload, get and delete files from S3
+- This service is circumvented in local and local docker development via using the filesystem to remove unnecessary network requests
+- As of writing the service does not include unit tests but it has been tested extensively in practice. Nevertheless unit tests should be added in the future.
 
 ## Development
 
-If you want to develop individual files against rabbit, you can initialize the service separately with
-`docker run -d -p 15672:15672 -p 5672:5672 --name rabbit-test-for-medium rabbitmq:3-management`
-and access it on the browser at `localhost:15672` with password and username = guest
 
-Using the services is however not supported out of the box without a Docker environment as of now, but
-this might be added later
+### Non Docker Development
 
+If you want to develop individual serices, you need to initialize rabbitmq service separately with `docker run -d -p 15672:15672 -p 5672:5672 rabbitmq:3-management`
+after which you can access it on the browser at `localhost:15672` with password and username = guest
+
+You should be able to run each service via it's start script after a yarn install
+and have them communicate with each other. However a combined startup is not orchestrated yet, so a recommended method would be to use our docker-compose
+for development
+
+### Docker based development
+
+As mentioned earlier you can run the project with `docker-compose up --build` in project root (project, not repository). This will spin up all necessary services and set them in RUNNING mode.
+
+A big gotcha at the time of writing is that there is no code hot-reload into the container, so in order for your changes to reflect to the runtime you need
+to do another docker build. Current workflow around this is to develop the services
+separately outside docker environment and then integration test them with docker-compose
+
+
+### Testing
+
+Each package uses [mocha](https://mochajs.org/) as it's test runner [sinon](https://sinonjs.org/) for test spies, stubs and mock and [expect](https://www.npmjs.com/package/expect) for test result assertion. In some cases sinon assertions are used such as for spies. Tests were placed in each package separately for easier test 
+management and separation of concerns. This is against requirement 3
+`Tests mush be in a separate folder “tests” at the root of your folder tree.`
+but the decision was made for ease of development and because it will
+not affect any functional requirements. This can be updated separately if this 
+is a hard requirement, but it will make path resolution more confusing and make
+test discoverability harder.
+
+The main focus of this project so far has been to have wide coverage on unit tests,
+which are writted for each module following the [Test-driven Development](https://en.wikipedia.org/wiki/Test-driven_development) principles. Additional integration
+tests could, and should, be added in the future. However this was removed as a goal
+because of time limitations, but will be improved upon later. 
+
+#### Example runs
+
+# Deployment
+
+This service is deployed to [Heroku](https://www.heroku.com/deploy-with-docker) automatically in our Gitlab CI/CD pipeline using separate containers for each service and using their CLI for deployment.
+
+Heroku was chosen because of it's relatively easy setup and a free tier that
+just supports the 5 apps required to run this project. However there are special considerations which are not outlined in Heroku's documentation clearly
+
+First of all we are dealing with a multi container deployment which is more difficult
+than the basic one container deployment which is outlined in most guidelines. For instance in [Heroku's documentation](https://devcenter.heroku.com/articles/container-registry-and-runtime) this is only briefly discussed and discussed a bit more in detail in this [article](https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images)
+
+However it leaves out two important details:
+1. Your app doesn't necessarily have an instance running automatically and you need to run:
+`heroku ps:scale your-instance=1 -a your-app-name`
+2. The container app will still only have one entrypoint and everything else has to be a worker instance! In our case we have one web instance (httpserv) and other instances are just workers in the background
+3. On free tier you can have only one containers running on one instance, hence here we split httpserv and obse into one app and then orig and imed into one app
+4. In order for the entrypoint to work, you need to define it as service type web, and in the multi-container mode you need to name the Dockerfile as Dockerfile.web. In the beginning I was using Dockerfile.httpserv and then wondered why I was getting error `H14 error in heroku - “no web processes running”`, mind you, this same error happens also if you have no instances running as outlined in point 1
+
+Details on the process model [here](heroku container:push web -a devops-apigateway)
+
+## Steps of deploying to Heroku container service for multiple images
+1. You need an app to run against `heroku create`
+2. You need some images, they needs to be nested in sub directories as Dockerfile.servicename
+notice that the service managing HTTP calls needs to be called Dockerfile.web to work
+3. You push images to heroku with `heroku container:push --recursive -a your-created-app-name`, this will build the images a push them
+4. You can always push new changes after doing changes to the files, if there are no changes no new image is uploaded
+4.1 You can also defined specifically what you want to push as `heroku container:push --recursive orig imed -a devops-imed-orig`
+    which will push Dockerfile.imed and Dockerfile.orig
+5. You can then release containers with `heroku container:release web otherservice other2service -a your-created-app`
 
 # Learnings and reflection
 
@@ -108,11 +271,14 @@ some traditional limitations of SQS, such as no FIFO support have been [solved a
 As a takeaway RabbitMQ does everything what a queue system needs to do and does it well. However for most uses cases
 it seems that a better option would be to opt for a hosted service like SQS.
 
+# Amount of effort
+
+The total amount of effort on this project stacked up to 65 hours
 
 
-## Notes on docker
+# Notes on docker
 
-### Up & Down
+## Up & Down
 
 ```
 docker-compose up --build -d
@@ -125,7 +291,7 @@ when you want to take the service run in root
 docker-compose down
 ```
 
-### On volumes
+## On volumes
 
 Volumes can be shared between containers, there are unnamed and named containers.
 Containers can be initialized with data or they can be filled with data afterwards.
@@ -139,7 +305,7 @@ $ cd /var/lib/docker/volumes
 $ ls
 ```
 
-### Useful commands 
+## Useful commands 
 
 NOTE!
 /bin/ash for alpine
@@ -178,7 +344,7 @@ if you want to remove absolutely all of one category add the `--all` flag
 **Kill all running containers**
 docker container kill $(docker ps -q)
 
-### Sources
+## Sources
 
 https://stackoverflow.com/questions/31746182/docker-compose-wait-for-container-x-before-starting-y
 https://stackoverflow.com/questions/47710767/what-is-the-alternative-to-condition-form-of-depends-on-in-docker-compose-versio
@@ -187,23 +353,23 @@ https://docs.docker.com/config/containers/start-containers-automatically/#use-a-
 https://docs.docker.com/engine/reference/commandline/container_prune/
 
 
-## RabbitMQ
+# RabbitMQ
 
 RabbitMQ is one of the most popular open source message brokers including message queuing, topic based
 communication with included support for data safety. 
 It is used by small to large enterprises, it is highly performant, scalable, lightweight and easy to deploy both on premises and to the cloud.
 
-### Publisher
+## Publisher
 Sends messages to an exchange or directly to a queue
 
-### Consumer
+## Consumer
 Initializes a named or unnamed queue which receives either direct messages
 from a producer or messages matching the subscribed topic from an exchange
 
-### Queue
+## Queue
 a client can be part of a queue and receive messages from it.
 
-### Receiving messages
+## Receiving messages
 How we actually receive a message depends on how we have subscribed, but 
 given that this is how we receive and handle a message
 
@@ -216,7 +382,7 @@ channel.consume(queue,((message) => {
 }))
 ```
 
-### Sending messages
+## Sending messages
 You can send a message to a queue with
 ```js
 const options = {
@@ -225,7 +391,7 @@ const options = {
 channel.sendToQueue(queue,Buffer.from(message),options)
 ```
 
-### Publishing a message
+## Publishing a message
 You can publish a message in an exchange with.
 ```js
 channel.publish('exchange-name','', Buffer.from('something to do'))
@@ -233,10 +399,10 @@ channel.publish('exchange-name','', Buffer.from('something to do'))
 instead of the empty string, you can define a routing key to deliver the message
 only to queues that are subscribed to the route
 
-### Exchange
+## Exchange
 a queue can be part of an exchange, the exchange can be in different modes.
 
-#### Fanout
+### Fanout
 In this mode the exchange sends all messages to all queues
 
 ```js
@@ -253,7 +419,7 @@ channel.assertQueue('', { exclusive: true }, (err, q) => {
 })
 ```
 
-#### Direct
+### Direct
 In this mode we send messages only directly to queues that have bound themselves
 to listen to the messages:
 
@@ -270,14 +436,14 @@ channel.assertQueue('', { exclusive: true }, (err, q) => {
 
 ```
 
-### Topic
+## Topic
 
 Sometimes a simple route is not enough, for instance if we are routing
 logs to different queues depending on the severity, we might also
 want to differentiate on the origin. A warning log from a critical system
 could for instance want to be routed to a queue that normally handles only errors.
 
-### Sources
+## Sources
 
 https://www.rabbitmq.com/tutorials/tutorial-one-javascript.html
 http://www.squaremobius.net/amqp.node/channel_api.html#channel
@@ -326,55 +492,11 @@ git remote add all git@github.com:jigarius/toggl2redmine.git
 git remote set-url --add --push all git@github.com:jigarius/toggl2redmine.git
 # Add a push URL to a remote. This means that "git push" will also push to this git URL.
 git remote set-url --add --push all git@bitbucket.org:jigarius/toggl2redmine.git
-```
+```  
 
-# Heroku multi-container deployment
-
-This [article](https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images) is great resource
-on the topic.
-
-However it leaves out two important details:
-1. Your app doesn't necessarily have an instance running automatically and you need to run:
-`heroku ps:scale your-instance=1 -a your-app-name`
-2. The container app will still only have one entrypoint and everything else has to be a worker instance! In our case we have one web instance (httpserv) and other instances are just workers in the background
-3. On free tier you can have only one containers running on one instance, hence here we split httpserv and obse into one app and then orig and imed into one app
-4. In order for the entrypoint to work, you need to define it as service type web, and in the multi-container mode you need to name the Dockerfile as Dockerfile.web. In the beginning I was using Dockerfile.httpserv and then wondered why I was getting error `H14 error in heroku - “no web processes running”`, mind you, this same error happens also if you have no instances running as outlined in point 1
-
-Details on the process model [here](heroku container:push web -a devops-apigateway)
-
-## Steps of deploying to Heroku container service for multiple images
-1. You need an app to run against `heroku create`
-2. You need some images, they needs to be nested in sub directories as Dockerfile.servicename
-notice that the service managing HTTP calls needs to be called Dockerfile.web to work
-3. You push images to heroku with `heroku container:push --recursive -a your-created-app-name`, this will build the images a push them
-4. You can always push new changes after doing changes to the files, if there are no changes no new image is uploaded
-4.1 You can also defined specifically what you want to push as `heroku container:push --recursive orig imed -a devops-imed-orig`
-    which will push Dockerfile.imed and Dockerfile.orig
-5. You can then release containers with `heroku container:release web otherservice other2service -a your-created-app`
-
-## Notes for implementation
-- Since both httpserv and api service need to be online and heroku only allows one external connection per instance we'll deploy these on separate instances and they can communicate via http.
-  - I could even just split each instance to their own dyno so we  can scale them independently. Either use heroku API or drop down to bash and use Heroku CLI https://devcenter.heroku.com/articles/platform-api-reference
-- Communication between API gateway and the rest of the services will be done via RabbitMQ
-- wanted to use Dockerfile.* type deploys with heroku container --recursive mode, but since we have to have two overlapping API services we can't do that, hence we need to cd to each subdir and do a normal deploy against a local Dockerfile
-- Testing
-  - Split APi implementation into parts, similar to what you have in the Calculator repo
-  - Unit testing
-    - https://medium.com/@xoor/building-a-node-js-rest-api-8-unit-testing-822c32a587df
-    - https://sinonjs.org/how-to/stub-dependency/
-    - Use an interceptor for http calls https://www.npmjs.com/package/nock such as the fetch to httpserv
-    - https://sinonjs.org/releases/latest/mocks/
-    - https://medium.com/@oyetoketoby80/how-to-write-unit-test-for-your-rest-api-f8f71376273f
-    - It seems that what is seen as unit testing is really integration testing most of the time, maybe I could seek to do first unit tests for methods and then integration tests on top?
-  
-# NEXT UP
-- [ ] Merge PR in TDD way
-- [ ] Update env inconsistencies for obse 
-- [ ] Add tests
-- [ ] Add shutdown and init methods for production
-- [ ] Write test report
   
 # TODO
 - [ ] And hot code reloading to all scripts
-- [ ] Allow development without a Docker environment
-- [ ] Consider using Lerna monorepo and changing the modules to be published as NPM packages
+- [ ] Consider using Lerna monorepo with Yarn Workspaces and changing the modules to be published as NPM packages
+- [ ] Write unit tests for S3 service
+- [ ] Add integration tests

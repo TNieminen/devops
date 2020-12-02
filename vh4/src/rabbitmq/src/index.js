@@ -160,7 +160,7 @@ module.exports = class Queue {
     catch (err) {
       console.warn('Queue TopicConsumer:', err)
       this.isTopicConsumerErrorState = true
-      setTimeout(() => this.initTopicConsumer(),1000)
+      setTimeout(() => this.initTopicConsumer(config),1000)
     }
   }
 
@@ -239,6 +239,7 @@ module.exports = class Queue {
   * @param {{content:'{id, payload, timestamp}'}} msg
   */
   putMessage(msg, type) {
+    // This is for control INIT/SHUTDOWN behaviour from all services
     if (type === 'fanout') {
       const message = JSON.parse(msg.content)
       const {id} = message
@@ -246,6 +247,15 @@ module.exports = class Queue {
       console.log('Putting and Emitting message fanout control', message)
       this.emitter.emit('message', message)
     }
+    // This is specifically to handle PAUSE and RUNNING from orig service
+    else if (msg.fields.routingKey === 'control-response') {
+      const message = JSON.parse(msg.content)
+      const {id} = message
+      this.messages[`${id}`] = message
+      console.log('Putting and Emitting message direct control', message)
+      this.emitter.emit('message', message)
+    }
+    // This is the handler for my.* type messages
     else {
       const message = msg.content.toString()
       const payload = msg.fields.routingKey

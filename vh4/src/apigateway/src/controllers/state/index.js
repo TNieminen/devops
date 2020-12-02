@@ -1,10 +1,10 @@
 require('dotenv-defaults').config()
 const Queue = require('@badgrhammer/rabbitmq-helpers')
 const queueMock = require('@badgrhammer/rabbitmq-helpers/src/mock')
-const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, LOGLEVEL} = process.env
+const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, DOCKER, LOGLEVEL} = process.env
 
-const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
-const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
+const serverUrl = DOCKER ? 'rabbit' : RABBIT_SERVER_URL
+const serverPort = DOCKER ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}?heartbeat=5`
     
 const rabbitConfig = {
@@ -24,7 +24,7 @@ if (ENV === 'test') {
   queue = queueMock
 }
 else {
-  queue = new Queue({rabbitConfig, topicConsumer:{topic:'control-response'}, topicProducer:true, fanoutConsumer:true, fanoutProducer:true})
+  queue = new Queue({rabbitConfig, topicConsumer:{topic:'control-response'}, topicProducer:true, fanoutProducer:true})
 }
 
 
@@ -33,7 +33,7 @@ else {
  * - if type is set to fanout messages are delivered to all services
  * - if type is set to topic, only services subscribed to that topic receive the message
  */
-async function sendMessage({timestamp, id, payload, type}) {
+async function sendMessage({timestamp, id, payload}) {
   if (!id) {
     throw new Error('Queue message has to have and id')
   }

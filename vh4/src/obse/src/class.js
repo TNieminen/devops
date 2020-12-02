@@ -2,12 +2,12 @@ require('dotenv-defaults').config()
 const Queue = require('@badgrhammer/rabbitmq-helpers')
 const pino = require('pino')
 const queueMock = require('@badgrhammer/rabbitmq-helpers/src/mock')
-const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, LOGLEVEL} = process.env
+const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, DOCKER, LOGLEVEL} = process.env
 
 const logger = pino({level: LOGLEVEL || 'error'})
 // TODO: Using docker as env is not consistent with docker setup, this needs to be made consistent
-const serverUrl = ENV === 'docker' ? 'rabbit' : RABBIT_SERVER_URL
-const serverPort = ENV === 'docker' ? `:${RABBIT_SERVER_PORT}` : ''
+const serverUrl = DOCKER ? 'rabbit' : RABBIT_SERVER_URL
+const serverPort = DOCKER ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
 const fs = require('./utils')
 

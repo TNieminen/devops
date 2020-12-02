@@ -2,11 +2,11 @@ require('dotenv-defaults').config()
 const Queue = require('@badgrhammer/rabbitmq-helpers')
 const pino = require('pino')
 const queueMock = require('@badgrhammer/rabbitmq-helpers/src/mock')
-const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, LOGLEVEL} = process.env
+const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, DOCKER, LOGLEVEL} = process.env
 
 const logger = pino({level: LOGLEVEL || 'error'})
-const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
-const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
+const serverUrl = DOCKER ? 'rabbit' : RABBIT_SERVER_URL
+const serverPort = DOCKER ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
 const waitUntilSendMessage = ENV === 'test' ? 10 : 1000 // we want to speed up our testing process
 

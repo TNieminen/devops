@@ -9,7 +9,7 @@
     "docker-test": "docker run imed /bin/ash -c 'yarn test'"
   },
   "dependencies": {
-    "@badgrhammer/rabbitmq-helpers": "^5.0.0",
+    "@badgrhammer/rabbitmq-helpers": "^5.0.4",
     "amqplib": "^0.6.0",
     "dotenv-defaults": "^2.0.1",
     "expect": "^26.6.2",

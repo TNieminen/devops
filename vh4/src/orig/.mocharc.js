@@ -4,5 +4,5 @@ module.exports = {
   timeout: 6000,
   recursive: true,
   exit: true,
-  spec: ['./test.js']
+  spec: ['./src/test.js']
 };

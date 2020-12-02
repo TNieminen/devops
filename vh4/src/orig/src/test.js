@@ -1,6 +1,6 @@
 require('dotenv-defaults').config()
 const expect = require('expect')
-const Orig = require('./index')
+const Orig = require('./class')
 const sinon = require('sinon')
 const mockQueue = require('@badgrhammer/rabbitmq-helpers/src/mock')
 

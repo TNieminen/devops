@@ -39,7 +39,7 @@ module.exports = class Orig {
       this.queue = queueMock
     }
     else {
-      this.queue = new Queue({rabbitConfig, topicProducer:true, topicConsumer:{topic:'control-request'}, fanoutConsumer:true})
+      this.queue = new Queue({rabbitConfig, topicProducer:true, fanoutConsumer:true})
     }
   }
 
@@ -132,29 +132,3 @@ module.exports = class Orig {
   }
 
 }
-
-// function sendMessages(channel) {
-//   let iterator = 0
-//   const messageInterval = setInterval(() => {
-//     const message = `MSG_${iterator += 1}`
-//     // we don't need a queue on the publisher side since we are using an exchange with a topic strategy
-//     channel.publish(EXCHANGE,'my.o', Buffer.from(message))
-//     if (iterator === amountOfMessages) {
-//       clearInterval(messageInterval)
-//       sendMessages(channel)
-//     }  
-//   },messageIntervalTime)
-// }
-
-// async function start() {
-//   const channel = await initExchangeProducer({
-//     rabbitMq,
-//     connectionString,
-//     exchange: EXCHANGE
-//   })
-//   setTimeout(() => {
-//     sendMessages(channel)
-//   }, setupTimeout)
-// }
-
-// start()

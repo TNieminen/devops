@@ -17,6 +17,9 @@ describe('===== ORIG =====', () => {
   describe('==== constructor ====', () => {
     it('Should create a new instance without errors', async() => {
       expect(() => new Orig()).not.toThrow()
+    })
+    it('Should set default state to be RUNNING', async() => {
+      expect(orig.state).toEqual('RUNNING')
     })    
   })
 
@@ -43,7 +46,8 @@ describe('===== ORIG =====', () => {
       sinon.assert.calledOnceWithExactly(spy,{message:JSON.stringify(message), topic:'control-response'})
       spy.restore()
     })
-  
+    
+
     it('Should start sending messages on init', () => {
       expect(orig.messageInterval).toBeDefined()
     })
@@ -55,16 +59,19 @@ describe('===== ORIG =====', () => {
       setTimeout(() => {
         sinon.assert.notCalled(spy)
       },200)
+      spy.restore()
     })
 
-    it('Should start sending messages after stopping', () => {
+    it('Should start sending messages after stopping', (done) => {
       orig = new Orig({messageIntervalTime:100})
       orig.stopSendingMessages()
       orig.startSendingMessages()
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
       setTimeout(() => {
-        const message = 'MSG_0'
+        const message = 'MSG_1'
         const topic = 'my.o'
-        sinon.assert.calledOnceWithExactly({message,topic})
+        sinon.assert.calledOnceWithExactly(spy, {message,topic})
+        done()
       },100)
     })
   })

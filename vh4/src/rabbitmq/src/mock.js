@@ -3,12 +3,18 @@ const {EventEmitter} = require('events')
 module.exports = {
   messages:{},
   emitter: new EventEmitter(),
-  publishTopicMessage({message}) {
-    const {payload, timestamp} = JSON.parse(message)
+  publishTopicMessage({message, topic}) {
+    if (!message) {
+      throw new Error('Cannot publish topic message without message')
+    }
+    if (!topic) {
+      throw new Error('Cannot publish topic message without topic')
+    }
   },
   publishFanoutMessage({message}) {
-    const {id, payload, timestamp} = JSON.parse(message)
-    this.messages[id] = {payload,timestamp}
+    if (!message) {
+      throw new Error('Cannot publish fanout message without message')
+    }
   },
   mockReceivedFanoutMessage({message}) {
     const {id, payload, timestamp} = JSON.parse(message)

@@ -2,7 +2,7 @@ const expect = require('expect')
 const Obse = require('./')
 const sinon = require('sinon')
 const mockQueue = require('@badgrhammer/rabbitmq-helpers/src/mock')
-const mock = require('@badgrhammer/rabbitmq-helpers/src/mock')
+const fs = require('./utils')
 
 let obse
 describe('===== OBSE =====', () => {
@@ -70,6 +70,23 @@ describe('===== OBSE =====', () => {
       done()
     })
 
+    it('Should handle a my.o message sent from the queue', () => {
+      const spy = sinon.spy(fs,'appendToFile')
+      const message = {payload:'my.o', message:'test-message'}
+      obse.handleMessage(message)
+      const expectedOutput = `Topic ${message.payload}: ${message.message}`
+      sinon.assert.calledWith(spy,sinon.match(new RegExp(expectedOutput)))
+      spy.restore()
+    })
+
+    it('Should handle a my.j message sent from the queue', () => {
+      const spy = sinon.spy(fs,'appendToFile')
+      const message = {payload:'my.j', message:'test-message'}
+      obse.handleMessage(message)
+      const expectedOutput = `Topic ${message.payload}: ${message.message}`
+      sinon.assert.calledWith(spy,sinon.match(new RegExp(expectedOutput)))
+      spy.restore()
+    })
 
   })
 

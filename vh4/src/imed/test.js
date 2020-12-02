@@ -23,4 +23,15 @@ describe('===== IMED =====', () => {
       expect(imed.queue).toMatchObject(mockQueue)
     })
   })
+
+  describe('==== messaging ====', () => {
+
+    it('Should handle a message sent from the queue', () => {
+      const spy = sinon.spy(imed,'handleMessage')
+      mockQueue.mockReceivedFanoutMessage({id:1, payload:'TEST', timestamp:1})
+      sinon.assert.calledOnceWithExactly(spy,{id:1, payload:'TEST', timestamp:1})
+      spy.restore()
+    })
+
+  })
 })

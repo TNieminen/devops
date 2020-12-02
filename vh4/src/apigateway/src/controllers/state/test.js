@@ -54,11 +54,11 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
     })
 
     it('Should reject if id is not defined', async() => {
-      await expect(state.changeState({payload:'RUNNING'})).rejects.toThrow()
+      await expect(state.changeState({payload:'SHUTDOWN'})).rejects.toThrow()
     })
 
     it('Should reject if timestamp is not defined', async() => {
-      await expect(state.changeState({id:Date.now(), payload:'RUNNING'})).rejects.toThrow()
+      await expect(state.changeState({id:Date.now(), payload:'SHUTDOWN'})).rejects.toThrow()
     })
 
     xit('Should reject because response was not received in time', async() => {
@@ -78,14 +78,14 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
     describe('/state', () => {
 
       it('Should return shutdown state if we have no state information set', async() => {
-        expect(state.getState()).toEqual('SHUTDOWN')
+        expect(state.getState()).toEqual('RUNNING')
       })
       it('Should return new state after update', async() => {
         // set state to running
         const timestamp = Date.now()
-        await state.changeState({timestamp, id:1, payload:'RUNNING'})
+        await state.changeState({timestamp, id:1, payload:'SHUTDOWN'})
         // expect this to be reflected in local state
-        expect(state.getState()).toEqual('RUNNING')
+        expect(state.getState()).toEqual('SHUTDOWN')
       })  
 
     })
@@ -94,12 +94,12 @@ describe('===== APIGATEWAY State Controller - Unit Tests =====', () => {
       it('Should return a log when it exists', async() => {
         // set state to running
         const timestamp = Date.now()
-        await state.changeState({timestamp, id:1, payload:'RUNNING'})
-        expect(state.getLog()).toEqual(`${new Date(timestamp).toISOString()} RUNNING\n`)
+        await state.changeState({timestamp, id:1, payload:'SHUTDOWN'})
+        expect(state.getLog()).toEqual(`${new Date(timestamp).toISOString()} SHUTDOWN\n`)
       })
       it('Should append to, not replace, old log', async() => {
-        const firstChange = {timestamp:Date.now(), id:1, payload:'RUNNING'}
-        const secondChange = {timestamp:Date.now(), id:2, payload:'PAUSED'}
+        const firstChange = {timestamp:Date.now(), id:1, payload:'SHUTDOWN'}
+        const secondChange = {timestamp:Date.now(), id:2, payload:'INIT'}
         await state.changeState(firstChange)
         await state.changeState(secondChange)
         const firstLog = `${new Date(firstChange.timestamp).toISOString()} ${firstChange.payload}\n`

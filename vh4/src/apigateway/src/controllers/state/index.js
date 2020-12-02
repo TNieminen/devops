@@ -1,7 +1,7 @@
 require('dotenv-defaults').config()
-const  Queue = require('@badgrhammer/rabbitmq-helpers')
-const {parse} = require('dotenv-defaults')
-const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, EXCHANGE, ENV, LOGLEVEL} = process.env
+const Queue = require('@badgrhammer/rabbitmq-helpers')
+const queueMock = require('@badgrhammer/rabbitmq-helpers/src/mock')
+const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, LOGLEVEL} = process.env
 
 const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
@@ -12,7 +12,8 @@ const rabbitConfig = {
   RABBIT_SERVER_PORT,
   RABBIT_USERNAME,
   RABBIT_PASSWORD, 
-  EXCHANGE,
+  TOPIC_EXCHANGE,
+  FANOUT_EXCHANGE,
   CONNECTION_STRING:connectionString
 }
 
@@ -20,24 +21,7 @@ let queue
 // Not an elegant way to mock queue, but I couldn't find a good way to sinon mock a class constructor
 // TODO: mock class constructor or find another solution that does not pollute production code
 if (ENV === 'test') {
-  queue = {
-    messages:{},
-    publishTopicMessage({message}) {
-      // in reality storing of this message would happen from 
-      // a response from an external service, for mocking purposes store original message
-      const {id, payload, timestamp} = JSON.parse(message)
-      this.messages[id] = {payload,timestamp}
-    },
-    publishFanoutMessage({message}) {
-      // in reality storing of this message would happen from 
-      // a response from an external service, for mocking purposes store original message
-      const {id, payload, timestamp} = JSON.parse(message)
-      this.messages[id] = {payload,timestamp}
-    },
-    getMessageById(id) {
-      return this.messages[id]
-    }
-  }
+  queue = queueMock
 }
 else {
   queue = new Queue({rabbitConfig, topicConsumer:{topic:'control-response'}, topicProducer:true, fanoutConsumer:true, fanoutProducer:true})
@@ -64,7 +48,7 @@ async function sendMessage({timestamp, id, payload, type}) {
   }
   const message = JSON.stringify({id, payload, timestamp})
   if (type === 'topic') {
-    const topic = 'my.control-request'
+    const topic = 'control-request'
     return queue.publishTopicMessage({message, topic})
   }
   return queue.publishFanoutMessage({message})  
@@ -74,7 +58,7 @@ async function sendMessage({timestamp, id, payload, type}) {
 
 // make queryinterval run faster in test env
 const queryIntervalTime = ENV === 'test' ? 10 : 1000
-const defaultState = 'SHUTDOWN'
+const defaultState = 'RUNNING'
 let state = defaultState
 let log = ''
 
@@ -138,6 +122,7 @@ function queryResponse(id) {
           clearInterval(queryInterval)
           state = response.payload
           log += `${new Date(response.timestamp).toISOString()} ${response.payload}\n`
+          console.log('Received response', response)
           resolve(response)
         }
       }

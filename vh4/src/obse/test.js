@@ -2,6 +2,7 @@ const expect = require('expect')
 const Obse = require('./')
 const sinon = require('sinon')
 const mockQueue = require('@badgrhammer/rabbitmq-helpers/src/mock')
+const mock = require('@badgrhammer/rabbitmq-helpers/src/mock')
 
 let obse
 describe('===== OBSE =====', () => {
@@ -42,6 +43,33 @@ describe('===== OBSE =====', () => {
       sinon.assert.calledOnceWithExactly(spy,{message:JSON.stringify(message), topic:'control-response'})
       spy.restore()
     })
+
+    it('Should keep receiving messages in RUNNING state after INIT sent from the queue', (done) => {
+      const messageSpy = sinon.spy(mockQueue,'publishTopicMessage')
+      const startSpy = sinon.spy(mockQueue,'startReceivingTopicMessages')
+      const message = {id:1, payload:'INIT', timestamp:1}
+      obse.handleMessage(message)
+      sinon.assert.calledWith(messageSpy,{message:JSON.stringify(message), topic:'control-response'})
+      sinon.assert.called(startSpy)
+      messageSpy.restore()
+      startSpy.restore()
+      done()
+    })
+
+    it('Should start receiving messages after INIT sent from the queue', (done) => {
+      obse.stopReceivingTopicMessages()
+      obse.state = 'SHUTDOWN'
+      const messageSpy = sinon.spy(mockQueue,'publishTopicMessage')
+      const startSpy = sinon.spy(mockQueue,'startReceivingTopicMessages')
+      const message = {id:1, payload:'INIT', timestamp:1}
+      obse.handleMessage(message)
+      sinon.assert.calledWith(messageSpy,{message:JSON.stringify(message), topic:'control-response'})
+      sinon.assert.called(startSpy)
+      messageSpy.restore()
+      startSpy.restore()
+      done()
+    })
+
 
   })
 

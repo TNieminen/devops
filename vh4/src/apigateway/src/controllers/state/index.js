@@ -97,10 +97,14 @@ async function changeState({timestamp, id, payload}) {
     return {timestamp,payload}
   }
   await sendMessage({timestamp, id, payload})
-  const response = await queryResponse(id)
+  // We can't await a response to init because no-one will answer, it is important to run it before querying response
   if (payload === 'INIT') {
     await initService()
+    state = 'RUNNING'
+    log += `${new Date(timestamp).toISOString()} INIT\n`
+    return {timestamp, payload}
   }
+  const response = await queryResponse(id)
   if (payload === 'SHUTDOWN') {
     console.log('Stopping service')
     await stopService()
@@ -125,7 +129,10 @@ function queryResponse(id) {
           else {
             state = response.payload
           }
-          log += `${new Date(response.timestamp).toISOString()} ${response.payload}\n`
+          // TODO: non SHUTDOWN and INIT messages do not contain valid timestamps
+          // inserting it here will be off my some milliseconds and should be fixed
+          const timestamp = response.timestamp || Date.now()
+          log += `${new Date(timestamp).toISOString()} ${response.payload}\n`
           console.log('Received response', response)
           resolve(response)
         }

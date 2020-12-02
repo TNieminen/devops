@@ -12,6 +12,7 @@ const serverUrl = DOCKER ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = DOCKER ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
 
+
 const rabbitConfig = {
   RABBIT_SERVER_URL, 
   RABBIT_SERVER_PORT,

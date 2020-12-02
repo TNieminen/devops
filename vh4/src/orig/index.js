@@ -24,7 +24,16 @@ const rabbitConfig = {
 
 module.exports = class Orig {
   constructor() {
-    
+    this.initQueue()
+  }
+
+  initQueue() {
+    if (ENV === 'test') {
+      this.queue = queueMock
+    }
+    else {
+      this.queue = new Queue({rabbitConfig, topicProducer:true, topicConsumer:{topic:'control-request'}, fanoutConsumer:true})
+    }
   }
 }
 

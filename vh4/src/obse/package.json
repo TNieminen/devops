@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./index.js",
     "build": "docker build -f Dockerfile --tag obse .",
-    "test": "NODE_ENV=test nyc mocha",
+    "test": "ENV=test nyc mocha",
     "docker-test": "docker run obse /bin/ash -c 'yarn test'"
   },
   "dependencies": {

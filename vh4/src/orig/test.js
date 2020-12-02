@@ -38,14 +38,14 @@ describe('===== ORIG =====', () => {
   })
 
   describe('==== messaging ====', () => {
+
     it('Should handle a message sent from the queue', () => {
       const spy = sinon.spy(orig,'handleMessage')
-      console.table(orig.handleMessage)
-      const message = JSON.stringify({id:1, payload:'TEST', timestamp:1})
-      mockQueue.mockReceivedFanoutMessage({message})
+      mockQueue.mockReceivedFanoutMessage({id:1, payload:'TEST', timestamp:1})
       sinon.assert.calledOnceWithExactly(spy,{id:1, payload:'TEST', timestamp:1})
       spy.restore()
     })
+
     it('Should handle a SHUTDOWN sent from the queue', () => {
       const spy = sinon.spy(mockQueue,'publishTopicMessage')
       const message = {id:1, payload:'SHUTDOWN', timestamp:1}

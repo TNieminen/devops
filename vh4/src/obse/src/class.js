@@ -99,22 +99,3 @@ module.exports = class Obse {
   }
 
 }
-
-// async function start() {
-//   await deleteFile()
-//   const {channel, queue} = await initExchangeConsumer({
-//     rabbitMq,
-//     connectionString,
-//     topic: 'my.#',
-//     exchange: EXCHANGE      
-//   })
-//   channel.consume(queue, (message) => {
-//     if (message !== null) {
-//       channel.ack(message)
-//       const logMessage = `${new Date().toISOString()} Topic ${message.fields.routingKey}: ${message.content.toString()}`
-//       appendToFile(logMessage)
-//     }
-//   })
-// }
-
-// start()

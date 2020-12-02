@@ -104,7 +104,7 @@ describe('===== ORIG =====', () => {
       const message = {id:1, payload:'RUNNING', timestamp:1}
       orig.handleMessage(message)
       setTimeout(() => {
-        const newMessage = {...message, error:'Error: Cannot set to running when shutdown'}
+        const newMessage = {...message, error:new Error('Cannot set to running when shutdown').toString()}
         sinon.assert.calledWith(spy,{message:JSON.stringify(newMessage), topic:'control-response'})
         sinon.assert.calledWith(spy, {message:'MSG_1',topic:'my.o'})
         spy.restore()

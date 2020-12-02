@@ -60,6 +60,9 @@ module.exports = class Orig {
       case 'INIT':
         this.handleInit(message)
         break
+      case 'RUNNING':
+        this.handleRunning(message)
+        break
       default:
         console.warn('Received message without handler', message)
         break
@@ -80,6 +83,17 @@ module.exports = class Orig {
     console.log('Setting service to running at INIT')
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
     this.startSendingMessages()
+  }
+
+  handleRunning(message) {
+    if (this.state === 'SHUTDOWN') {
+      message.error = new Error('Cannot set to running when shutdown').toString()
+      console.warn(message.error)
+    }
+    this.state = message.payload
+    console.log('Setting service state to', this.state)
+    this.startSendingMessages()
+    this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
   }
 
   startSendingMessages() {

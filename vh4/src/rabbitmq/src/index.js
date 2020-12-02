@@ -50,6 +50,7 @@ module.exports = class Queue {
     this.isTopicConsumerErrorState = true
     this.isFanoutProducerErrorState = true
     this.isFanoutConsumerErrorState = true
+    this.receiveTopicMessages = true
     this.messages = {}
     this.emitter = new EventEmitter()
   }
@@ -142,7 +143,7 @@ module.exports = class Queue {
       })
       this.topicConsumer = channel
       this.topicConsumer.consume(queue, (message) => {
-        if (message !== null) {
+        if (message !== null && this.receiveTopicMessages) {
           this.putMessage(message, 'topic')
           // it would be better to acknowledge messages only when they are actually sent as a response in case apigateway goes down
           // however for development simplicity we'll just save messages and acknowledge them immediately
@@ -269,6 +270,20 @@ module.exports = class Queue {
   clearMessages() {
     Object.keys(this.messages).forEach(key => delete this.messages[`${key}`])
     return this.messages
+  }
+
+  /**
+   * @description stops receiving topic based messages
+   */
+  stopReceivingTopicMessages() {
+    this.receiveTopicMessages = false
+  }
+
+  /**
+   * @description starts receiving topic based messages
+   */
+  startReceivingTopicMessages() {
+    this.receiveTopicMessages = true
   }
 
 }

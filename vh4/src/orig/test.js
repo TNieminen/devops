@@ -111,6 +111,18 @@ describe('===== ORIG =====', () => {
         done()
       },200)
     })
+
+    it('Should pause sending messages after PAUSE sent from the queue', (done) => {
+      orig = new Orig({messageIntervalTime:100})
+      const message = {id:1, payload:'PAUSE', timestamp:1}
+      orig.handleMessage(message)
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      setTimeout(() => {
+        sinon.assert.calledOnceWithExactly(spy,{message:JSON.stringify(message), topic:'control-response'})
+        spy.restore()
+        done()
+      },100)
+    })
     
     it('Should start sending messages on init', () => {
       expect(orig.messageInterval).toBeDefined()

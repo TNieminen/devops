@@ -47,19 +47,28 @@ describe('===== ORIG =====', () => {
       spy.restore()
     })
     
-
+    // it('Should keep sending messages in RUNNING state after INIT sent from the queue', () => {
+    //   const spy = sinon.spy(mockQueue,'publishTopicMessage')
+    //   const message = {id:1, payload:'INIT', timestamp:1}
+    //   orig.handleMessage(message)
+    //   sinon.assert.calledWith(spy,{message:JSON.stringify(message), topic:'control-response'})
+    //   sinon.assert.calledWith(spy, {message:'MSG_0',topic:'my.o'})
+    //   spy.restore()
+    // })
+    
     it('Should start sending messages on init', () => {
       expect(orig.messageInterval).toBeDefined()
     })
 
-    it('Should stop sending messages', () => {
+    it('Should stop sending messages', (done) => {
       orig = new Orig({messageIntervalTime:100})
       orig.stopSendingMessages()
       const spy = sinon.spy(mockQueue,'publishTopicMessage')
       setTimeout(() => {
         sinon.assert.notCalled(spy)
+        spy.restore()
+        done()
       },200)
-      spy.restore()
     })
 
     it('Should start sending messages after stopping', (done) => {
@@ -71,9 +80,9 @@ describe('===== ORIG =====', () => {
         const message = 'MSG_1'
         const topic = 'my.o'
         sinon.assert.calledOnceWithExactly(spy, {message,topic})
+        spy.restore()
         done()
       },100)
-      spy.restore()
     })
   })
 

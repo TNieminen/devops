@@ -9,7 +9,7 @@
     "docker-test": "docker run obse /bin/ash -c 'yarn test'"
   },
   "dependencies": {
-    "@badgrhammer/rabbitmq-helpers": "^2.0.0",
+    "@badgrhammer/rabbitmq-helpers": "^4.0.1",
     "@badgrhammer/s3-helpers": "^1.0.0",
     "amqplib": "^0.6.0",
     "aws-sdk": "^2.795.0",
@@ -17,6 +17,7 @@
     "expect": "^26.6.2",
     "mocha": "^8.2.1",
     "nyc": "^15.1.0",
-    "pino": "^6.7.0"
+    "pino": "^6.7.0",
+    "sinon": "^9.2.1"
   }
 }

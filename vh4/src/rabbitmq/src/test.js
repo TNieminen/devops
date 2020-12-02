@@ -154,14 +154,18 @@ describe('===== APIGATEWAY State Queue - Unit Tests =====', () => {
     })
   })
 
-  
-
-  // describe('==== QUEUE clearMessages ====', () => {
-  //   it('Should clear all messages', () => {
-  //     queue.messages[1] = 'TEST'
-  //     expect(queue.clearMessages()).toEqual({})
-  //   })
-  // })
-  
-  
+  describe('==== QUEUE start&stop ReceivingTopicMessages ====', () => {
+    it('Should by default be receiving topic message fanout message', () => {
+      expect(queue.receiveTopicMessages).toEqual(true)
+    })
+    it('Should stop receiving topic messages', () => {
+      queue.stopReceivingTopicMessages()
+      expect(queue.receiveTopicMessages).toEqual(false)
+    })
+    it('Should start receiving topic messages', () => {
+      queue.receiveTopicMessages = false
+      queue.startReceivingTopicMessages()
+      expect(queue.receiveTopicMessages).toEqual(true)
+    })
+  })  
 })

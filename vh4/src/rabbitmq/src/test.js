@@ -65,13 +65,13 @@ describe('===== APIGATEWAY State Queue - Unit Tests =====', () => {
     it('Should fail creating queue without valid fanout exchange', () => {
       const tmpConfig = JSON.parse(JSON.stringify(rabbitConfig))
       delete tmpConfig['FANOUT_EXCHANGE']
-      return expect(() => new Queue({rabbitConfig:tmpConfig})).toThrowError(new Error('Queue requires config key FANOUT_EXCHANGE'))
+      return expect(() => new Queue({rabbitConfig:tmpConfig, fanoutConsumer:true})).toThrowError(new Error('Queue requires config key FANOUT_EXCHANGE'))
     })
 
     it('Should fail creating queue without valid topic exchange', () => {
       const tmpConfig = JSON.parse(JSON.stringify(rabbitConfig))
       delete tmpConfig['TOPIC_EXCHANGE']
-      return expect(() => new Queue({rabbitConfig:tmpConfig})).toThrowError(new Error('Queue requires config key TOPIC_EXCHANGE'))
+      return expect(() => new Queue({rabbitConfig:tmpConfig, topicConsumer:{topic:'TEST'}})).toThrowError(new Error('Queue requires config key TOPIC_EXCHANGE'))
     })
 
     it('Should fail creating queue without valid connection string', () => {
@@ -94,20 +94,20 @@ describe('===== APIGATEWAY State Queue - Unit Tests =====', () => {
     it('Should return messages object that contains our fanout message', () => {
       const message = '{"id":1, "payload":"TEST", "timestamp":1}'
       expect(queue.putMessage({content:message},type = 'fanout')).toMatchObject({1:{payload:'TEST', timestamp:1}})
-      expect(messageEmit).toHaveBeenCalledWith(JSON.parse(message))
+      expect(messageEmit.calledWith(JSON.parse(message)))
     })
 
     it('Should throw an error if message cannot be parsed', () => {
       const message = undefined
       expect(() => queue.putMessage({content:message}, type = 'fanout')).toThrow()
-      expect(messageEmit).not.toHaveBeenCalled()
+      expect(messageEmit.notCalled)
     })
 
     it('Should return a messages object that contains our topic object', () => {
       // there is no requirement to store topic messages, hence we are not storing these into messages or assigning a unique id
       const message = Buffer.from('TEST')
       queue.putMessage({fields:{routingKey:'my.o'},content:message},type = 'topic')
-      expect(messageEmit).toHaveBeenCalledWith({payload:'my.o', message:'TEST'})
+      expect(messageEmit.calledWith({payload:'my.o', message:'TEST'}))
     })
 
   })

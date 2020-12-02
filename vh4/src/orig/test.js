@@ -30,9 +30,18 @@ describe('===== ORIG =====', () => {
   describe('==== messaging ====', () => {
     it('Should handle a message sent from the queue', () => {
       const spy = sinon.spy(orig,'handleMessage')
-      const message = JSON.stringify({payload:'TEST', timestamp:1})
-      mockQueue.publishFanoutMessage({message})
-      expect(spy.calledOnceWith({payload:'TEST', timestamp:1}))
+      console.table(orig.handleMessage)
+      const message = JSON.stringify({id:1, payload:'TEST', timestamp:1})
+      mockQueue.mockReceivedFanoutMessage({message})
+      sinon.assert.calledOnceWithExactly(spy,{id:1, payload:'TEST', timestamp:1})
+      spy.restore()
+    })
+    it('Should handle a SHUTDOWN sent from the queue', () => {
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      const message = {id:1, payload:'SHUTDOWN', timestamp:1}
+      orig.handleMessage(message)
+      sinon.assert.calledOnceWithExactly(spy,{message:JSON.stringify(message), topic:'control-response'})
+      spy.restore()
     })
   })
 

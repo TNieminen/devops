@@ -14,6 +14,7 @@ describe('===== ORIG =====', () => {
     orig = new Orig()
   })
 
+  
   describe('==== constructor ====', () => {
     it('Should create a new instance without errors', async() => {
       expect(() => new Orig()).not.toThrow()
@@ -47,21 +48,39 @@ describe('===== ORIG =====', () => {
       spy.restore()
     })
     
-    // it('Should keep sending messages in RUNNING state after INIT sent from the queue', () => {
-    //   const spy = sinon.spy(mockQueue,'publishTopicMessage')
-    //   const message = {id:1, payload:'INIT', timestamp:1}
-    //   orig.handleMessage(message)
-    //   sinon.assert.calledWith(spy,{message:JSON.stringify(message), topic:'control-response'})
-    //   sinon.assert.calledWith(spy, {message:'MSG_0',topic:'my.o'})
-    //   spy.restore()
-    // })
+    it('Should keep sending messages in RUNNING state after INIT sent from the queue', (done) => {
+      orig = new Orig({messageIntervalTime:100})
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      const message = {id:1, payload:'INIT', timestamp:1}
+      orig.handleMessage(message)
+      setTimeout(() => {
+        sinon.assert.calledWith(spy,{message:JSON.stringify(message), topic:'control-response'})
+        sinon.assert.calledWith(spy, {message:'MSG_1',topic:'my.o'})
+        spy.restore()
+        done()
+      },100)
+    })
+
+    it('Should start sending messages after INIT sent from the queue', (done) => {
+      orig = new Orig({messageIntervalTime:100})
+      orig.stopSendingMessages()
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      const message = {id:1, payload:'INIT', timestamp:1}
+      orig.handleMessage(message)
+      setTimeout(() => {
+        sinon.assert.calledWith(spy,{message:JSON.stringify(message), topic:'control-response'})
+        sinon.assert.calledWith(spy, {message:'MSG_1',topic:'my.o'})
+        spy.restore()
+        done()
+      },100)
+    })
     
     it('Should start sending messages on init', () => {
       expect(orig.messageInterval).toBeDefined()
     })
 
     it('Should stop sending messages', (done) => {
-      orig = new Orig({messageIntervalTime:100})
+      orig = new Orig({messageIntervalTime:200})
       orig.stopSendingMessages()
       const spy = sinon.spy(mockQueue,'publishTopicMessage')
       setTimeout(() => {

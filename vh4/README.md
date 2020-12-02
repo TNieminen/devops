@@ -10,16 +10,24 @@
     - [Docker based development](#docker-based-development)
     - [Testing](#testing)
       - [Example runs](#example-runs)
+- [CI/CD pipeline](#cicd-pipeline)
 - [Deployment](#deployment)
-  - [Steps of deploying to Heroku container service for multiple images](#steps-of-deploying-to-heroku-container-service-for-multiple-images)
+  - [Steps of deploying to Heroku container service for multiple images in recursive mode](#steps-of-deploying-to-heroku-container-service-for-multiple-images-in-recursive-mode)
 - [Learnings and reflection](#learnings-and-reflection)
+  - [API Gateway](#api-gateway)
+  - [HTTPSERV](#httpserv)
+  - [IMED](#imed)
+  - [OBSE](#obse)
+  - [ORIG](#orig)
+  - [RabbitMq](#rabbitmq)
+  - [General thoughts and feedback](#general-thoughts-and-feedback)
 - [Amount of effort](#amount-of-effort)
 - [Notes on docker](#notes-on-docker)
   - [Up & Down](#up--down)
   - [On volumes](#on-volumes)
   - [Useful commands](#useful-commands)
   - [Sources](#sources)
-- [RabbitMQ](#rabbitmq)
+- [RabbitMQ](#rabbitmq-1)
   - [Publisher](#publisher)
   - [Consumer](#consumer)
   - [Queue](#queue)
@@ -216,6 +224,11 @@ tests could, and should, be added in the future. However this was removed as a g
 because of time limitations, but will be improved upon later. 
 
 #### Example runs
+TODO
+
+# CI/CD pipeline
+
+TODO
 
 # Deployment
 
@@ -227,49 +240,135 @@ just supports the 5 apps required to run this project. However there are special
 First of all we are dealing with a multi container deployment which is more difficult
 than the basic one container deployment which is outlined in most guidelines. For instance in [Heroku's documentation](https://devcenter.heroku.com/articles/container-registry-and-runtime) this is only briefly discussed and discussed a bit more in detail in this [article](https://devcenter.heroku.com/articles/container-registry-and-runtime#pushing-multiple-images)
 
-However it leaves out two important details:
-1. Your app doesn't necessarily have an instance running automatically and you need to run:
-`heroku ps:scale your-instance=1 -a your-app-name`
-2. The container app will still only have one entrypoint and everything else has to be a worker instance! In our case we have one web instance (httpserv) and other instances are just workers in the background
-3. On free tier you can have only one containers running on one instance, hence here we split httpserv and obse into one app and then orig and imed into one app
-4. In order for the entrypoint to work, you need to define it as service type web, and in the multi-container mode you need to name the Dockerfile as Dockerfile.web. In the beginning I was using Dockerfile.httpserv and then wondered why I was getting error `H14 error in heroku - “no web processes running”`, mind you, this same error happens also if you have no instances running as outlined in point 1
+The topics that are left out in the documentation include:
+1. Your app doesn't necessarily have an instance running automatically and you need to run: `heroku ps:scale your-instance=1 -a your-app-name` to get it running
+2. The container app can only have one entrypoint (web) and everything else has to be a worker instance. Because of this I had to separate httpserv and apigateway to run on their own instances.
+3. On free tier you can have only one containers running on one instance
+4. In order for the entrypoint to work, you need to define it as service type web, and in the multi-container mode you need to name the Dockerfile as Dockerfile.web. In the beginning I was using Dockerfile.httpserv and then wondered why I was getting error `H14 error in heroku - “no web processes running”`, mind you, this same error happens also if you have no instances running as outlined in point 1. However because we have two web instances, the recursive deployment from project root doesn't work and we have to cd into each sub folder and do a publish and release there against a normal Dockerfile
 
 Details on the process model [here](heroku container:push web -a devops-apigateway)
 
-## Steps of deploying to Heroku container service for multiple images
+## Steps of deploying to Heroku container service for multiple images in recursive mode
 1. You need an app to run against `heroku create`
 2. You need some images, they needs to be nested in sub directories as Dockerfile.servicename
 notice that the service managing HTTP calls needs to be called Dockerfile.web to work
 3. You push images to heroku with `heroku container:push --recursive -a your-created-app-name`, this will build the images a push them
 4. You can always push new changes after doing changes to the files, if there are no changes no new image is uploaded
-4.1 You can also defined specifically what you want to push as `heroku container:push --recursive orig imed -a devops-imed-orig`
-    which will push Dockerfile.imed and Dockerfile.orig
-5. You can then release containers with `heroku container:release web otherservice other2service -a your-created-app`
+5. You can also defined specifically what you want to push as `heroku container:push --recursive orig imed -a devops-imed-orig` which will push Dockerfile.imed and Dockerfile.orig
+6. You can then release containers with `heroku container:release web otherservice other2service -a your-created-app`
 
 # Learnings and reflection
 
-In my experience topic based queue communication is a great way to improve the robustness and reliability of a system.
-For instance what I've used queues for in the past was to ensure that audio buffers were uploaded,
-processed and saved in a safe manner. This was important, because this datatype represented a non-repeating,
-unique and irreplaceable piece of information. Whereas in a HTTP based system might fail a request and the data
-would be lost forever with a queue system (in this case Kue running on Redis) allowed me to 
-1. Make sure that the queue system received the message, and re-send if necessary.
-2. Make sure that the items don't get lost via redundancy of queues and data replication in case of a redis service crash
-3. Make sure that items are removed from the queue only after the item has been marked completed
-In addition most queue systems allow to set both timed events and TTL events, where an event would be fired at, or after
-some time, and where an item might have a specific time to be consumed before it was removed from the queue or possibly
-moved to a separate dead-letter queue for later manual or automatic processing. None of these features are baked in HTTP based communication.
+In this section I discuss each part of the implementation and why I made the choices I did in addition to general reflection on the assignment. A general note on implementation
+requirements was that the containers were required to be shut down on SHUTDOWN message.
+However I decided partly against this for a couple of reasons. 
+1. The local development environment doesn't need to scale containers up and down and just simulating shutdown and init behavior gets the job done. Then in production we can separately call each container to be actually shutdown and setup when needed.
+2. The wording was to 'kill all containers' which sounds that apigateway should be part of this. I decided against this because this is the main point of contact to the service and if SHUTDOWN would bring it also down and INIT functionality would be effectively meaningless
+3. Each container both in development and production will receive and confirm SHUTDOWN and INIT messages to apigateway before the state change request resolves. This way we can have a controlled shutdown of our service and not just kill it and also we get the benefit of waiting anc confirming on the request whether or not the services were shut down correctly.
 
-What sets RabbitMQ apart for Redis, or for instance AWS SQS, is it's topic based communication, which makes it easy
-to consume the same events in multiple places and also multiple times if necessary. In addition the documentation
-and getting started guides of the software are excellent. However even with this, if I had to pick a queue system
-I would go for SQS in the future, this is because rabbitMQ need to be managed by you, or you have to pay someone to manage it.
-At this point when you are paying for a service SQS will be a cheaper option. If you decide to self-host, you need
-to start worrying about redundancy and clustering of the service, which is a pain of itself. In addition
-some traditional limitations of SQS, such as no FIFO support have been [solved already](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html).
+## API Gateway
 
-As a takeaway RabbitMQ does everything what a queue system needs to do and does it well. However for most uses cases
-it seems that a better option would be to opt for a hosted service like SQS.
+I'm generally happy with how this service turned out. The routing and controller structure is clear with tests placed near to what they are testing for easy updatability and discoverability.
+For added abstraction routes could be separated into a separate file, but this was not done
+because the routes were quite simple.
+
+The biggest headache of this was to implement the state controller. Firstly the state itself
+could work better as a class since it has a state (as the name implies) and would make the implementation cleaner. I was planning refactoring this but ran out out time.
+In addition there were some edge cases that were discovered late in development, for instance that
+the topic based messages such as RUNNING and PAUSE don't include accurate (to the millisecond)
+timestamps. This is due to the complexity of setting up rabbitmq in a reliable way and how
+I iterated many times over on the philosophy on how communication happens between services.
+This is discussed more in detail in section [Rabbitmq](#rabbitmq)
+
+In general what would have remedied this issue would have been to spend more time planning
+rabbitmq messaging between services. This integration point was implemented and tested
+as the last step in the process and with limited implementation time and without proper
+integration tests a big bang approach had the consequences that could be expected.
+However on another note adding those tests in place would have increased the workload
+with a rough estimate of 10-15 hours which would've sent the total time spent on the project
+to around 80 hours.
+
+## HTTPSERV
+
+This service is a rather barebones express server and was kept that way. Implementation
+did not change excluding headaches around CORS configuration which was remembered late in development and added confusion when testing the `/messages` route especially in Heroku environment. This would have been picked up and fixed earlier if development had been
+done natively in Docker environment.
+
+## IMED
+
+This service was changed into a class based implementation to clean up the code and manage
+queue connections better. No special considerations here, but suffered from issues discussed in section [Rabbitmq](#rabbitmq)
+
+
+## OBSE
+
+This service was changed into a class based implementation to clean up the code and manage
+queue connections better. The debatable choice made here was to use S3 as the backbone of
+storing messages. This is not the optimum choice because S3 is an object storage, whereas
+the appending nature of the operation would call for a filesystem, or block based storage.
+This lead to an awkward configuration where on append we first get the last log from s3, append to it and then upload it back. In practice this is not an issue in the scope of this project, but
+if the service was to run long periods of time even the requested small text file would ultimately
+resolve slowly enough to cause performance issues. The decision of using S3 was made with time constraints in mind because it is easy to setup and use. The method of storing and getting messages was abstracted into their own `deletefile` and `appendToFile` methods so that this
+component could be easily changed in the future which I definitely would do given more time.
+
+## ORIG
+
+This was the first worker service that I realized a class based implementation would be easier to manage, and hence I spent majority of my time with this and implementing queue wrappers around it.
+An interesting learning here was that whereas in browser Javascript a setInterval returns an id, with which the interval can then be cleared with clearInterval(id) and the interval will not be defined anymore. However in Node.js setInterval returns an object, which changes implementation details.
+
+
+## RabbitMq
+
+This was the major headache of the setup. Firstly from the first implementation in project `vh3`
+I would always just restart the containers when there were errors in RabbitMQ connection. However
+since apigateway should always be on and robust to errors, this was not an option. This lead me down a rabbit hole of how to manage situations where the rabbitMQ is not set up yet and the connection fails and also how to then manage an incoming message when the connection is not up without loosing that message. In addition there was not a lot of documentation around this at least in Node.js and my final solution was done via experimentation and intensive googling. However I'm rather pleased with how the code turned out where we continually
+retry connections without affecting the experience on the API side. Any message sent before RabbitMQ is healthy, or if it goes down during runtime, is promise based and will be send
+once the connection is up and running again.
+
+Second headache was how to manage communication between services. Since I decided
+on that SHUTDOWN and INIT should be received by all the services which calls for a fanout queue, but as per requirements orig handles only PAUSE and RUNNING states, which calls out for a topic based queue, I had to find a way to separate these. 
+In addition we should also support the other my.x type topic messages.
+
+I sought out to then have two types of messages, control messages that control the state
+of the service that are sent via a fanout queue to all services, these included SHUTDOWN and INIT. Then a topic based control queue separately between apigateway and orig to pass RUNNING and PAUSE messages. Lastly I would have a topic queue for my.x type messages. These would be governed by two exchanges, one for fanout and one for topic. 
+
+However I made a mistake in the implementation. The topic messages had a structure of
+
+```js
+{
+  message:'MSG_1' // notice missing timestamp, we'll get back to this later
+}
+```
+and topic would be read from the routingKey.
+
+The fanout type messages had a type of
+
+```js
+{
+  payload:'INIT',
+  id:123124124,
+  timestamp:12313123
+}
+```
+
+however when I created a message handler for my queue, I failed to realize that I structured
+PAUSE and RUNNING messages in the fanout format, but sent them via a topic based queue.
+This would break down the logic and I had to add a patch late in development to work around this.
+In addition because I was sending PAUSE and RUNNING messages over the topic queue, I would not have timestamps for these which was required to store timestamped state changes. To work around
+this I added a timestamp to the message when the apigateway got a response from orig.
+
+This is another thing that should be mentioned. In order for me to have flow of:
+
+1. REST api receives change state request
+2. State controller sends message to required services
+3. State controller waits for response from services before resolving the request
+
+I had to find a way to know when the response arrives from the service. I couldn't use the typical way of consuming messages from the queue directly, because this would break the abstraction between queue and state, and I also didn't want to add special callbacks
+because this would've made the implementation even more complex. What I then decided to do was to use a polling mechanism, where when the REST api gets a state change request it would be assigned an id. This message would go to the service and on completion it would send the same message back which we would find by id. If something went wrong the message would also contain an error so we can send that back to the user. An error case example is when you try to change state to `RUNNING` when the current state is `SHUTDOWN`. This polling mechanism worked okay and is relatively clear in it's implementation in apigateway state controller, however what is missing is a timeout. If for some reason for instance the orig service is not up and we change the state to RUNNING, the request will hang until it times out. This is not a very elegant way to handle the issue, but on the other hand if the REST call times out we can always try again because the local state doesn't update before the service resolves and we can always send the request again.
+
+## General thoughts and feedback
+
+
 
 # Amount of effort
 

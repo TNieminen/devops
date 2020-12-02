@@ -1,5 +1,5 @@
 const expect = require('expect')
-const Imed = require('./index')
+const Imed = require('./class')
 const sinon = require('sinon')
 const mockQueue = require('@badgrhammer/rabbitmq-helpers/src/mock')
 

@@ -29,9 +29,9 @@ module.exports = {
   /**
    * @description simulated emits on topic messages
    */
-  mockReceivedTopicMessage({payload, timestamp}) {
+  mockReceivedTopicMessage({payload, message}) {
     if (this.receiveTopicMessages) {
-      this.emitter.emit('message', {payload,timestamp}) 
+      this.emitter.emit('message', {payload, message}) 
     }
   },
   getMessageById(id) {

@@ -3,7 +3,7 @@ const pino = require('pino')
 const Queue = require('@badgrhammer/rabbitmq-helpers')
 const queueMock = require('@badgrhammer/rabbitmq-helpers/src/mock')
 const {RABBIT_SERVER_URL, RABBIT_SERVER_PORT, RABBIT_USERNAME, RABBIT_PASSWORD, TOPIC_EXCHANGE, FANOUT_EXCHANGE, ENV, LOGLEVEL} = process.env
-const messageIntervalTime = 3000
+const defaultMessageIntervalTime = 3000
 const amountOfMessages = 3 
 
 
@@ -23,9 +23,14 @@ const rabbitConfig = {
 }
 
 module.exports = class Orig {
-  constructor() {
+  /**
+   * @param {{messageIntervalTime:number}} config
+   */
+  constructor(config = {}) {
     this.initQueue()
     this.initListeners()
+    this.messageIntervalTime = config.messageIntervalTime || defaultMessageIntervalTime
+    this.startSendingMessages()
   }
 
   initQueue() {
@@ -40,11 +45,47 @@ module.exports = class Orig {
   initListeners() {
     this.queue.on('message',(message) => {
       this.handleMessage(message)
+      this.startSendingMessages()
     })
   }
 
   handleMessage(message) {
-    
+    const {payload} = message
+    console.log('HANDLE MSSAGE', message)
+    switch (payload) {
+      case 'SHUTDOWN':
+        this.handleShutdown(message)
+        break
+      default:
+        console.warn('Received message without handler', message)
+        break
+    }
+  }
+
+  handleShutdown(message) {
+    this.state = 'SHUTDOWN'
+    this.stopSendingMessages()
+    this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+  }
+
+  startSendingMessages() {
+    let iterator = 0
+    if (!this.messageInterval) {
+      this.messageInterval = setInterval(() => {
+        const message = `MSG_${iterator += 1}`
+        this.queue.publishTopicMessage({message,topic:'my.o'})
+        if (iterator === amountOfMessages) {
+          clearInterval(this.messageInterval)
+          this.messageInterval = undefined
+          this.startSendingMessages()
+        }  
+      },this.messageIntervalTime)
+    }
+  }
+
+  stopSendingMessages() {
+    clearInterval(this.messageInterval)
+    this.messageInterval = undefined
   }
 
 }

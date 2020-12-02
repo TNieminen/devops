@@ -95,31 +95,3 @@ module.exports = class Imed {
     this.queue.stopReceivingTopicMessages()
   }
 }
-
-
-// async function start() {
-//   const producer = await initExchangeProducer({
-//     rabbitMq,
-//     connectionString,
-//     exchange: EXCHANGE
-//   })
-
-//   const {channel:consumer, queue} = await initExchangeConsumer({
-//     rabbitMq,
-//     connectionString,
-//     topic: 'my.o',
-//     exchange: EXCHANGE
-//   })
-  
-//   consumer.consume(queue, (message) => {
-//     if (message !== null) {
-//       setTimeout(() => {
-//         const sendMessage = `Got message ${message.content.toString()}`
-//         producer.publish(EXCHANGE,'my.i', Buffer.from(sendMessage))
-//         consumer.ack(message)
-//       },1000)
-//     }
-//   })
-// }
-
-// start()

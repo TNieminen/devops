@@ -51,14 +51,14 @@ there was nothing about this in the requirements.
 
 To get all containers up and running you should start with
 
-`curl -X PUT localhost:8081/state?payload=INIT`
+`curl -X PUT https://devops-apigateway.herokuapp.com/state?payload=INIT`
 
 After this you can try other commands that are outlined
 under [running the project](#running-the-project).
 
 When you are done, please remember to shut down the system with
 
-`curl -X PUT localhost:8081/state?payload=SHUTDOWN`
+`curl -X PUT https://devops-apigateway.herokuapp.com/state?payload=SHUTDOWN`
 
 A list of implemented features can be found discussed [here](#implemented-project-requirements)
 

@@ -41,7 +41,7 @@ describe('===== IMED =====', () => {
       spy.restore()
     })
 
-    it('Should keep receiving messages in RUNNING state after INIT sent from the queue', (done) => {
+    it('Should keep receiving messages in RUNNING state after INIT sent from the queue', () => {
       const messageSpy = sinon.spy(mockQueue,'publishTopicMessage')
       const startSpy = sinon.spy(mockQueue,'startReceivingTopicMessages')
       const message = {id:1, payload:'INIT', timestamp:1}
@@ -50,10 +50,9 @@ describe('===== IMED =====', () => {
       sinon.assert.notCalled(startSpy) // we are already receiving messages, don't call again
       messageSpy.restore()
       startSpy.restore()
-      done()
     })
 
-    it('Should start receiving messages after INIT sent from the queue', (done) => {
+    it('Should start receiving messages after INIT sent from the queue', () => {
       imed.stopReceivingTopicMessages()
       imed.state = 'SHUTDOWN'
       const messageSpy = sinon.spy(mockQueue,'publishTopicMessage')
@@ -64,7 +63,18 @@ describe('===== IMED =====', () => {
       sinon.assert.called(startSpy)
       messageSpy.restore()
       startSpy.restore()
-      done()
+    })
+
+    it('Should send a my.i message on a received my.o message', (done) => {
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      const message = {payload:'my.o', message:'test-message'}
+      imed.handleMessage(message)
+      const expectedMessage = `Got message ${message.message}`
+      setTimeout(() => {
+        sinon.assert.calledWith(spy, {message:expectedMessage,topic:'my.i'})
+        spy.restore()
+        done()
+      },20 )
     })
 
   })

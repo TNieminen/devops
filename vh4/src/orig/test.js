@@ -43,6 +43,30 @@ describe('===== ORIG =====', () => {
       sinon.assert.calledOnceWithExactly(spy,{message:JSON.stringify(message), topic:'control-response'})
       spy.restore()
     })
+  
+    it('Should start sending messages on init', () => {
+      expect(orig.messageInterval).toBeDefined()
+    })
+
+    it('Should stop sending messages', () => {
+      orig = new Orig({messageIntervalTime:100})
+      orig.stopSendingMessages()
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      setTimeout(() => {
+        sinon.assert.notCalled(spy)
+      },200)
+    })
+
+    it('Should start sending messages after stopping', () => {
+      orig = new Orig({messageIntervalTime:100})
+      orig.stopSendingMessages()
+      orig.startSendingMessages()
+      setTimeout(() => {
+        const message = 'MSG_0'
+        const topic = 'my.o'
+        sinon.assert.calledOnceWithExactly({message,topic})
+      },100)
+    })
   })
 
 })

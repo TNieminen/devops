@@ -43,9 +43,32 @@ module.exports = class Imed {
   }
 
   handleMessage(message) {
-    
+    const {payload} = message
+    switch (payload) {
+      case 'SHUTDOWN':
+        this.handleShutdown(message)
+        break
+      default:
+        console.warn('Received message without handler', message)
+        break
+    }
   }
 
+  handleShutdown(message) {
+    this.state = 'SHUTDOWN'
+    this.stopReceivingTopicMessages()
+    this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+  }
+  
+  startReceivingTopicMessages() {
+    console.log('Imed started receiving messages')
+    this.queue.startReceivingTopicMessages()
+  }
+  
+  stopReceivingTopicMessages() {
+    console.log('Imed stopped receiving messages')
+    this.queue.stopReceivingTopicMessages()
+  }
 }
 
 

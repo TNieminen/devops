@@ -113,10 +113,10 @@ describe('===== ORIG =====', () => {
     })
 
     it('Should pause sending messages after PAUSE sent from the queue', (done) => {
-      orig = new Orig({messageIntervalTime:100})
+      orig = new Orig({messageIntervalTime:200})
       const message = {id:1, payload:'PAUSE', timestamp:1}
-      orig.handleMessage(message)
       const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      orig.handleMessage(message)
       setTimeout(() => {
         sinon.assert.calledOnceWithExactly(spy,{message:JSON.stringify(message), topic:'control-response'})
         spy.restore()
@@ -124,6 +124,20 @@ describe('===== ORIG =====', () => {
       },100)
     })
     
+    it('Should fail to pause when state is shutdown after PAUSE sent from the queue', (done) => {
+      orig = new Orig({messageIntervalTime:200})
+      orig.state = 'SHUTDOWN'
+      const message = {id:1, payload:'PAUSE', timestamp:1}
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      orig.handleMessage(message)
+      setTimeout(() => {
+        const newMessage = {...message, error:new Error('Cannot pause when shutdown').toString()}
+        sinon.assert.calledOnceWithExactly(spy,{message:JSON.stringify(newMessage), topic:'control-response'})
+        spy.restore()
+        done()
+      },100)
+    })
+
     it('Should start sending messages on init', () => {
       expect(orig.messageInterval).toBeDefined()
     })

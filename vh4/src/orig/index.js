@@ -63,6 +63,9 @@ module.exports = class Orig {
       case 'RUNNING':
         this.handleRunning(message)
         break
+      case 'PAUSE':
+        this.handlePause(message)
+        break
       default:
         console.warn('Received message without handler', message)
         break
@@ -93,6 +96,18 @@ module.exports = class Orig {
     this.state = message.payload
     console.log('Setting service state to', this.state)
     this.startSendingMessages()
+    this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+  }
+
+  handlePause(message) {
+    if (this.state === 'SHUTDOWN') {
+      message.error = new Error('Cannot pause when shutdown').toString()
+      console.warn(message.error)
+      return this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+    }
+    this.state = message.payload
+    console.log('Setting service state to', this.state)
+    this.stopSendingMessages()
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
   }
 

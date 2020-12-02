@@ -23,7 +23,19 @@ const rabbitConfig = {
 
 module.exports = class Obse {
   constructor() {
+    this.initQueue()
+    this.state = 'RUNNING'
   }
+
+  async initQueue() {
+    if (ENV === 'test') {
+      this.queue = queueMock
+    }
+    else {
+      this.queue = new Queue({rabbitConfig, topicProducer:true, topicConsumer:{topic:'my.#'}, fanoutConsumer:true})
+    }
+  }
+
 }
 
 // async function start() {

@@ -177,10 +177,10 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@badgrhammer/rabbitmq-helpers@^4.0.1":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@badgrhammer/rabbitmq-helpers/-/rabbitmq-helpers-4.0.1.tgz#4b6c367e821270ed273751b4eb382f56be56ebec"
-  integrity sha512-pG6YON8TEb1S/+PGrDUD22OhL1nNq9sT4rbOwOY/+ZpDHyALlwfEumeLDe3KLsIUmhKIgxA05YLoPcDdVB97hA==
+"@badgrhammer/rabbitmq-helpers@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@badgrhammer/rabbitmq-helpers/-/rabbitmq-helpers-5.0.0.tgz#76ce88bdb3fd85ce86361115613a124de59b6f7e"
+  integrity sha512-KlYsokKq/sc2Ywi9CTzDmnb1eVvWcxyybC8lCKJ6eAZncRtsSBlObdR8T17sO0OmhuQUskQsng/MJ0S12pxOKw==
   dependencies:
     amqplib "^0.6.0"
     expect "^26.6.2"

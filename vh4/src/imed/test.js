@@ -33,5 +33,13 @@ describe('===== IMED =====', () => {
       spy.restore()
     })
 
+    it('Should handle a SHUTDOWN sent from the queue', () => {
+      const spy = sinon.spy(mockQueue,'publishTopicMessage')
+      const message = {id:1, payload:'SHUTDOWN', timestamp:1}
+      imed.handleMessage(message)
+      sinon.assert.calledOnceWithExactly(spy,{message:JSON.stringify(message), topic:'control-response'})
+      spy.restore()
+    })
+
   })
 })

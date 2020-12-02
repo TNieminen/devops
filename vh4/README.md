@@ -45,6 +45,22 @@
 
 # Instructions for examiner
 
+This project is up and running [here](https://devops-apigateway.herokuapp.com/)
+notice that there is no route handler for '/' so it will just return a 404 since
+there was nothing about this in the requirements.
+
+To get all containers up and running you should start with
+
+`curl -X PUT localhost:8081/state?payload=INIT`
+
+After this you can try other commands that are outlined
+under [running the project](#running-the-project).
+
+When you are done, please remember to shut down the system with
+
+`curl -X PUT localhost:8081/state?payload=SHUTDOWN`
+
+A list of implemented features can be found discussed [here](#implemented-project-requirements)
 
 # Description
 *Original project outline can be found in the attached assignment.pdf document*
@@ -52,6 +68,10 @@
 The goal of this solo-developed project is to implement a service which utilizes RabbitMQ to communicate messages between worker threads with two REST API ends points which control the state of the system and return information from it.
 The application is running on Heroku and is backed by a CI/CD pipeline
 running on a local instance of Gitlab.
+
+This project is up and running [here](https://devops-apigateway.herokuapp.com/)
+notice that there is no route handler for '/' so it will just return a 404.
+Read further
 
 Component-wise breakdown:
 

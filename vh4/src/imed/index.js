@@ -8,6 +8,7 @@ const logger = pino({level: LOGLEVEL || 'error'})
 const serverUrl = ENV === 'development' ? 'rabbit' : RABBIT_SERVER_URL
 const serverPort = ENV === 'development' ? `:${RABBIT_SERVER_PORT}` : ''
 const connectionString = `amqp://${RABBIT_USERNAME}:${RABBIT_PASSWORD}@${serverUrl}${serverPort}` 
+const waitUntilSendMessage = ENV === 'test' ? 10 : 1000 // we want to speed up our testing process
 
 const rabbitConfig = {
   RABBIT_SERVER_URL, 
@@ -51,6 +52,9 @@ module.exports = class Imed {
       case 'INIT':
         this.handleInit(message)
         break
+      case 'my.o':
+        this.handleMyo(message)
+        break
       default:
         console.warn('Received message without handler', message)
         break
@@ -73,6 +77,14 @@ module.exports = class Imed {
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
   }
   
+  handleMyo(message) {
+    console.log('Handling myo', message)
+    setTimeout(() => {
+      const sendMessage = `Got message ${message.message}`
+      this.queue.publishTopicMessage({message:sendMessage, topic:'my.i'})
+    },waitUntilSendMessage)
+  }
+
   startReceivingTopicMessages() {
     console.log('Imed started receiving messages')
     this.queue.startReceivingTopicMessages()

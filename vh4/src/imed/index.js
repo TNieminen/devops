@@ -22,6 +22,8 @@ const rabbitConfig = {
 module.exports = class Imed {
   constructor() {
     this.state = 'RUNNING'    
+    this.initQueue()
+    this.initListeners()
   }
   
   initQueue() {
@@ -31,6 +33,17 @@ module.exports = class Imed {
     else {
       this.queue = new Queue({rabbitConfig, topicProducer:true, topicConsumer:{topic:'my.o'}, fanoutConsumer:true})
     }
+  }
+
+  initListeners() {
+    this.queue.on('message',(message) => {
+      console.log('Imed got message', message)
+      this.handleMessage(message)
+    })
+  }
+
+  handleMessage(message) {
+    
   }
 
 }

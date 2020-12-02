@@ -41,5 +41,31 @@ describe('===== IMED =====', () => {
       spy.restore()
     })
 
+    it('Should keep receiving messages in RUNNING state after INIT sent from the queue', (done) => {
+      const messageSpy = sinon.spy(mockQueue,'publishTopicMessage')
+      const startSpy = sinon.spy(mockQueue,'startReceivingTopicMessages')
+      const message = {id:1, payload:'INIT', timestamp:1}
+      imed.handleMessage(message)
+      sinon.assert.calledWith(messageSpy,{message:JSON.stringify(message), topic:'control-response'})
+      sinon.assert.notCalled(startSpy) // we are already receiving messages, don't call again
+      messageSpy.restore()
+      startSpy.restore()
+      done()
+    })
+
+    it('Should start receiving messages after INIT sent from the queue', (done) => {
+      imed.stopReceivingTopicMessages()
+      imed.state = 'SHUTDOWN'
+      const messageSpy = sinon.spy(mockQueue,'publishTopicMessage')
+      const startSpy = sinon.spy(mockQueue,'startReceivingTopicMessages')
+      const message = {id:1, payload:'INIT', timestamp:1}
+      imed.handleMessage(message)
+      sinon.assert.calledWith(messageSpy,{message:JSON.stringify(message), topic:'control-response'})
+      sinon.assert.called(startSpy)
+      messageSpy.restore()
+      startSpy.restore()
+      done()
+    })
+
   })
 })

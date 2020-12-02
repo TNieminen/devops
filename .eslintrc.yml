@@ -8,7 +8,7 @@ plugins:
 parserOptions:
   parser: babel-eslint
   sourceType: module
-  ecmaVersion: 8
+  ecmaVersion: 2018
   ecmaFeatures:
     experimentalObjectRestSpread: true
     impliedStrict: true
@@ -30,11 +30,11 @@ rules:
   spaced-comment: error
   template-curly-spacing: 'off'
   indent:
-  - warn
-  - 2
-  - ignoredNodes:
-    - TemplateLiteral
-    SwitchCase: 1
+    - warn
+    - 2
+    - ignoredNodes:
+        - TemplateLiteral
+      SwitchCase: 1
   keyword-spacing:
     - error
     - after: true

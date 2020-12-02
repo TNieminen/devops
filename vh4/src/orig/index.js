@@ -27,6 +27,7 @@ module.exports = class Orig {
    * @param {{messageIntervalTime:number}} config
    */
   constructor(config = {}) {
+    this.state = 'RUNNING'
     this.initQueue()
     this.initListeners()
     this.messageIntervalTime = config.messageIntervalTime || defaultMessageIntervalTime
@@ -56,6 +57,9 @@ module.exports = class Orig {
       case 'SHUTDOWN':
         this.handleShutdown(message)
         break
+      case 'INIT':
+        this.handleInit(message)
+        break
       default:
         console.warn('Received message without handler', message)
         break
@@ -66,6 +70,16 @@ module.exports = class Orig {
     this.state = 'SHUTDOWN'
     this.stopSendingMessages()
     this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+  }
+
+  handleInit(message) {
+    if (this.state === 'RUNNING') {
+      return this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+    }
+    this.state = 'RUNNING'
+    console.log('Setting service to running at INIT')
+    this.queue.publishTopicMessage({message:JSON.stringify(message), topic:'control-response'})
+    this.startSendingMessages()
   }
 
   startSendingMessages() {

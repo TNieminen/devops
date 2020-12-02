@@ -14,6 +14,12 @@ describe('===== ORIG =====', () => {
     orig = new Orig()
   })
 
+  afterEach(() => {
+    orig.stopSendingMessages()
+    orig = undefined
+  })
+
+
   
   describe('==== constructor ====', () => {
     it('Should create a new instance without errors', async() => {
@@ -64,6 +70,7 @@ describe('===== ORIG =====', () => {
     it('Should start sending messages after INIT sent from the queue', (done) => {
       orig = new Orig({messageIntervalTime:100})
       orig.stopSendingMessages()
+      orig.state = 'SHUTDOWN'
       const spy = sinon.spy(mockQueue,'publishTopicMessage')
       const message = {id:1, payload:'INIT', timestamp:1}
       orig.handleMessage(message)
